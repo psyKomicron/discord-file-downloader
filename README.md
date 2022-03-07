@@ -3,7 +3,6 @@
 Telecharge des fichiers de messages Discord.
 ## How-to
 - Pour télécharger des fichiers, depuis Discord tapez ` !get-images` dans le salon textuel duquel vous voulez télécharger des fichiers. Une fois le message envoyé, l’application téléchargera les fichiers en vous informant du progrès via la console.
-- To start the application make sure you followed , then open a terminal in the application folder. Type `python3 app.py` to start the app, you should get :
 - Pour lancer l’application, assurez-vous que vous avez suivi les [étapes d’installation](#Installation). Ouvrez un terminal puis naviguez si besoin est à la racine de l’application. Tapez ensuite `python3 app.py` pour démarrer l’application, vous devriez avoir le message suivant dans la console
   
   ```
