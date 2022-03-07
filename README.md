@@ -1,5 +1,12 @@
 # discord-file-downloader
-Downloads files from discord messages.
+Downloads files from discord messages. 
+## How-to
+- To download files, type `!get-images` in the Discord channel where you want to download images, and wait for the app to download them (application progress is show in the console).
+- To start the application make sure you followed [installation steps](#Installation), then open a terminal in the application folder. Type `python3 app.py` to start the app, you should get :
+  
+  ```
+  bot > logged in as [bot name], waiting for command
+  ```
 
 ## Installation
 - `git clone https://github.com/psyKomicron/discord-file-downloader.git`
@@ -12,14 +19,14 @@ Downloads files from discord messages.
 
 ## Directory set-up
 ```
-/[project folder]
-  ./config.json
-  ./secrets.json
-  ./app.py
-  ./LocalClient.py
-  ./.gitignore
+discord-file-downloader/
+├── config.json
+├── secrets.json
+├── app.py
+├── LocalClient.py
+└── .gitignore
   ``` 
-  *the .gitignore file is not required nor used by the app, but you will download it when you clone the repository*
+  *the `.gitignore` file is not required nor used by the app, but you will download it when you clone the repository*
 
 ## Configuration
 The configuration for the app is handled by the `config.json` file.
