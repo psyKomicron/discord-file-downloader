@@ -4,8 +4,8 @@ Downloads files from discord messages.
 ## Installation
 - `git clone`
 - check python installation (>= 3.08)
-- install discord.py via `pip` or another tool
-- renamed `secrets template.json` to `secrets.json` and fill `"discord_client_secret"`
+- install [discord.py](https://discordpy.readthedocs.io/en/stable/intro.html) via `pip` or another tool
+- rename `secrets template.json` to `secrets.json` and fill `"discord_client_secret"`
 - set up the config file to your needs (`config.json`)
 
 ## Directory set-up
