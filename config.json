@@ -1,0 +1,9 @@
+{
+    "max_fetch_files": 1000,
+    "show_unhandled_messages": "False",
+    "exit_on_error": "True",
+    "download_folder_path": "./image downloads/",
+    "valid_files": "\\.(jpg|png|bmp|gif|mp4|mp3|mov)$",
+    "show_skips": "False",
+    "exit_after_command": "True"
+}
