@@ -127,6 +127,14 @@ dmypy.json
 
 # src
 secrets.json
+*.jpg
+*.png
+*.gif
+*.mov
+*.mp3
+*.bmp
+*.mp4
+
 
 # Pyre type checker
 .pyre/
