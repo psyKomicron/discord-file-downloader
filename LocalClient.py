@@ -8,7 +8,7 @@ import json
 
 class LocalClient(Client):
     def __init__(self, *, loop=None, **options):
-        super().__init__(loop=loop, **options)
+        super().__init__(intents = Intents.all(),loop=loop, **options)
         
         try:
             config = json.load(open("./config.json"))
@@ -53,14 +53,15 @@ class LocalClient(Client):
     async def _handleCommand(self, message: Message):
         channel: TextChannel = message.channel
         messages = None
+
         if self.fetchSize < 0:
             print("bot > \tfetching messages in {0}, this might take a while...".format(channel.name))
-            messages = await channel.history(limit = None).flatten()
+            messages = [message async for message in channel.history(limit = None)]
         else:
             print("bot > \tfetching messages (maximum: {0}) in {1}, this might take a while...".format(self.fetchSize, channel.name))
-            messages = await channel.history(limit = self.fetchSize).flatten()
+            messages = [message async for message in channel.history(limit = self.fetchSize)]
 
-        print("bot > \t\tfetched {0} messages, searching for images.".format(len(messages)))
+        # print("bot > \t\tfetched {0} messages, searching for images.".format(len(messages)))
 
         filteredMessages = []
         for message in messages:
