@@ -1,48 +1,33 @@
 import logging
-import sys
-import json
-from logging import *
+from discord import Client, Intents, Message
 # This app
-from src.config import *
-from src.translations import getString
+import src.config as config
 
+logger = logging.getLogger(__name__)
 
-def startHelp(config):
-    print("Discord file downloader by psyKomicron")
-    print(getString("read_full_doc").format(config["repo_path"]))
+async def on_message(message):
+    logger.debug(message)
 
-    print(getString("checking_login"))
-    passwd = getLogin()
-    if len(passwd) == 0:
-        print(getString("password_is_empty"))
-
-    pass
+async def on_ready():
+    logger.info("Client ready")
 
 
 if __name__ == '__main__':
-    # Set log level to debug.
-    logging.basicConfig(level=logging.DEBUG)
-    
-    try:
-        config = json.load(open("./config.json"))
-        if not checkConfigFile(config):
-            raise Exception("Config is malformed")
-    
-        if len(sys.argv) == 3:
-            try:
-                pass
-            except Exception as ex:
-                print(f"Failed to login: \n\t{ex}")
+    logging.basicConfig(level=config.LOG_LEVEL)
 
-        else:
-            if len(sys.argv) < 3:
-                # TODO: Run command line help
-                startHelp()
-                pass
-            elif len(sys.argv) > 3:
-                # TODO: Print command line help (user considered power user). 
-                print("Too many options.")
+    conf = config.open_config()
+    if config.DEBUG:
+        config.print_options(conf)
+
+    try:
+        client = Client(intents = Intents.all())
+        
+        on_ready = client.event(on_ready)
+        on_message = client.event(on_message)
+        
+        login = config.get_login()
+        logger.info(login)
+        client.run(login)
 
     except Exception as ex:
-        critical("Config file is malformed or absent. Please check installation.")
-        debug(f"Exception: {ex}")
+        print(f"Failed to login: \n\t{ex}")
