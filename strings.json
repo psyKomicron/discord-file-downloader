@@ -1,0 +1,19 @@
+{
+    "en-US": {
+        "bot_ready_message": "bot ready",
+        "received_message": "received message",
+        "read_full_doc": "For full documentation look at {0}",
+        "checking_login": "Checking login...",
+        "password_is_empty": "Password is empty, please give the right password.",
+        "login_failed": "Login failed."
+    },
+
+    "fr-FR": {
+        "bot_ready": "robot pret",
+        "received_message": "message recu",
+        "read_full_doc": "Pour lire la documentation complete, voir {0}",
+        "checking_login": "Verification des identifiants...",
+        "password_is_empty": "Le mot de passe est vide, merci de renseigner le bon mot de passe.",
+        "login_failed": "La connection a echouee."
+    }
+}

@@ -63,6 +63,17 @@ Affiche dans la console les fichiers (lien du fichier) qui ne vérifient pas `va
 - `False` l'application restera ouverte une fois les téléchargements effectués.
 
 
+## Connection
+L'application a besoin d'un 'token' de connection afin de pouvoir communiquer avec Discord. Ce token sera demande au premier demarrage de l'application et sera stockee dans le fichier `secrets.json` ensuite. Si ce fichier est supprime ou que le 'token' de connection n'est plus present dans le fichier l'application vous le redemandera afin de pouvoir se connecter.
+
+Si le fichier `secrets.json` est deja cree lors du premier demarrage, le token de connection sera directement recupere dans le fichier.
+
+Si l'application ne peut pas se connecter:
+ - Le token de connection n'est pas present: renseignez a nouveau le token.
+ - Le token est **invalide**: il faut regenerez un token de connection via le panneau **administrateur** de l'application.
+ - Verifiez que votre ordinateur a acces a internet.
+
+
 # EN
 # discord-file-downloader
 Downloads files from discord messages. 

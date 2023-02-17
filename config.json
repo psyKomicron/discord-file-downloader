@@ -5,5 +5,6 @@
     "download_folder_path": "./image downloads/",
     "valid_files": "\\.(jpg|png|bmp|gif|mp4|mp3|mov)$",
     "show_skips": "False",
-    "exit_after_command": "True"
+    "exit_after_command": "True",
+    "repo_path": "https://github.com/psyKomicron/discord-file-downloader"
 }
