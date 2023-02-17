@@ -138,3 +138,6 @@ secrets.json
 
 # Pyre type checker
 .pyre/
+
+# VIM temp files
+*.swp
