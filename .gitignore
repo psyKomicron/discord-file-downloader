@@ -127,6 +127,7 @@ dmypy.json
 
 # src
 secrets.json
+config.json
 *.jpg
 *.png
 *.gif
