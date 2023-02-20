@@ -1,3 +1,6 @@
+**This README is currently not up to date with the actual project. The packages requirements will probably remain the same, but other configuration steps are to be ignored since the project is being heavily modified there.**
+
+
 # FR
 # discord-file-downloader
 Telecharge des fichiers de messages Discord.
