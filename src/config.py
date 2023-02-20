@@ -13,11 +13,13 @@ SHOW_TOKEN=False
 LOG_LEVEL=logging.DEBUG
 CONFIG_PATH="./config.json"
 DEBUG=True
+APP_NAME="DFiD (Discord file downloader)"
+RESOURCE_REGEX=re.compile(r"(https?: \/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})", re.IGNORECASE)
 
 
 class Config:
     logger: logging.Logger = logging.getLogger(__name__)
-    max_fetch_files: int = 0
+    max_fetch_size: int = 0
     show_unhandled_messages: bool = False
     exit_on_error: bool = True
     download_folder_path: str = ""
@@ -33,7 +35,7 @@ class Config:
         logging.basicConfig(level=logging.DEBUG)
     
 
-    def openConfig(self):
+    def openConfig(self) -> None:
         if genericpath.exists("./config.json"):
             rawJson = json.load(open("./config.json"))
             # Check config file to see if it is empty/defaulted.
@@ -41,8 +43,9 @@ class Config:
                 # Configuration file is NOT empty.
                 if self._loadConfig(rawJson):
                     self.logger.info("Config file is ok and loaded.")
+                    return
                 else:
-                    self.logger.warning("Config file not ok, does not match required format")
+                    self.logger.warning("Config file not ok, does not match required format, starting configuration...")
             else:
                 self.logger.critical("Config file is empty.")
                 raise Exception()
@@ -59,41 +62,13 @@ class Config:
                 chosenLanguage = item
                 break
         translations.setLanguage(chosenLanguage)
+        language = chosenLanguage
 
         print(getString("read_full_doc").format(REPO_PATH))
         print(getString("starting_configuration"))
 
         # Ask user for login
-        print(getString("checking_login"))
-        passwd = self.getLogin()
-        if not passwd:
-            print("\t" + getString("token_is_empty"))
-            
-            if passwd == None:
-                # Create secrets.json file
-                open("./secrets.json", "x")
-                self.logger.info("Created new secrets file (secrets.json)")
-
-            passwd = input("\t" + getString("input_token"))
-            name = input("\t" + getString("input_secret_name"))
-            obj = { 
-                "discord_client_secret": passwd, 
-                "name": name
-            }
-            json.dump(obj, open("./secrets.json", "w"))
-            self.secrets_file = "./secrets.json"
-            
-        elif SHOW_TOKEN or re.search(self.validationPattern, input(getString("check_token"))):
-            print(getString("show_token").format(passwd))
-            if not re.search(self.validationRe, input(getString("is_token_ok"))):
-                passwd = input("\t" + getString("input_token"))
-                name = input("\t" + getString("input_secret_name"))
-                obj = { 
-                    "discord_client_secret": passwd, 
-                    "name": name
-                }
-                json.dump(obj, open("./secrets.json", "w"))    
-
+        self.setupToken()
 
         # Ask user for the download folder.
         currentPath = os.path.abspath("./downloads")
@@ -114,38 +89,38 @@ class Config:
         self.download_folder_path = downloadPath
 
         showAdvancedSettings = input(getString("show_advanced_settings"))
-        if re.search(yesPattern, showAdvancedSettings):
+        if re.search(self.validationRe, showAdvancedSettings):
             # Max fetch files.
             maxFetch = input(getString("max_fetch_files_name"))
             if not isinstance(maxFetch, int):
                 print(getString("not_a_number"))
                 raise Exception("Max fetch file is not a number.")
             #_updateConfig("max_fetch_files", maxFetch)
-            self.max_fetch_files = maxFetch
+            self.max_fetch_size = maxFetch
 
             # Show unhandled messages.
-            showUnhandledMessages = re.search(yesPattern, input(getString("show_unhandled_messages_name")))
+            showUnhandledMessages = re.search(self.validationRe, input(getString("show_unhandled_messages_name")))
             #_updateConfig("show_unhandled_messages", showUnhandledMessages)
             self.show_unhandled_messages = showUnhandledMessages
 
             # Exit on error
-            exitOnError = re.search(yesPattern, input(getString("exit_on_error_name")))
+            exitOnError = re.search(self.validationRe, input(getString("exit_on_error_name")))
             #_updateConfig("exit_on_error", exitOnError)
             self.exit_on_error = exitOnError
 
             # Show skips
-            showSkips = re.search(yesPattern, input(getString("show_skips")))
+            showSkips = re.search(self.validationRe, input(getString("show_skips")))
             #_updateConfig("show_skips", showSkips)
             self.show_skips = showSkips
 
             # Exit after command
-            exitAfterCommand = re.search(yesPattern, input(getString("exit_after_command_name")))
+            exitAfterCommand = re.search(self.validationRe, input(getString("exit_after_command_name")))
             #_updateConfig("exit_after_command", exitAfterCommand)
             self.exit_after_command = exitAfterCommand
         else:
             print("\t> " + getString("skipping_advanced_options"))
             # Set config defaults
-            self.max_fetch_files = 1000
+            self.max_fetch_size = 1000
             self.show_unhandled_messages = False
             self.exit_on_error = True
             self.show_skips = False
@@ -153,14 +128,14 @@ class Config:
 
         print(getString("printing_recap"))
         print(
-            "\t" + getString("max_fetch_files_name") + f": {self.max_fetch_files}\n\t" +
-            getString("show_unhandled_messages_name") + ": " + getString(f"{self.show_unhandled_messages}") + "\n\t" +
-            getString("exit_on_error_name") + ": " + getString(f"{self.exit_on_error}") + "\n\t" + 
-            getString("show_skips_name") + ": " + getString(f"{self.show_skips}") + "\n\t" +
+            "\t-" + getString("max_fetch_files_name") + f": {self.max_fetch_size}\n\t-" +
+            getString("show_unhandled_messages_name") + ": " + getString(f"{self.show_unhandled_messages}") + "\n\t-" +
+            getString("exit_on_error_name") + ": " + getString(f"{self.exit_on_error}") + "\n\t-" + 
+            getString("show_skips_name") + ": " + getString(f"{self.show_skips}") + "\n\t-" +
             getString("exit_after_command_name") + ": " + getString(f"{self.exit_after_command}")
         )
 
-        ok = re.search(yesPattern, input(getString("is_this_ok")))
+        ok = re.search(self.validationRe, input(getString("is_this_ok")))
         if ok:
             if not genericpath.exists(CONFIG_PATH):
                 open(CONFIG_PATH, "x")
@@ -172,19 +147,19 @@ class Config:
             print(getString("not_saving_config"))
 
 
-    def getLogin(self):
+    def getToken(self) -> str:
         if genericpath.exists("./secrets.json"):
             secretsFile = json.load(open("./secrets.json"))
             if "discord_client_secret" in secretsFile:
                 if "name" in secretsFile:
                     name = secretsFile["name"]
-                    self.logger.debug(f"loading secret {name}")
+                    self.logger.info(f"Loading secret {name}")
                 else:
-                    self.logger.warning("secret is unnamed, it is possible that the secrets file does not have the correct format")
+                    self.logger.warning("Secret is unnamed, it is possible that the secrets file does not have the correct format")
 
                 secret = secretsFile["discord_client_secret"]
                 if secret == None:
-                    self.logger.critical("secrets file doesn't have secret, the app cannot login to Discord without it.")
+                    self.logger.critical("Secrets file doesn't have secret, the app cannot login to Discord without it.")
                     #TODO: Raise exception to inform the user.
 
                 return secret
@@ -192,17 +167,50 @@ class Config:
             return None
 
 
-    #def print_options():
-        #for key in config:
-         #   # print("{0} : {1}\n".format(get_string(key + "_name"), config[key]))
-        #  print(f"{key} -> {config[key]}")
+    def setupToken(self) -> None:
+        print(getString("checking_login"))
+        passwd = self.getToken()
+        if not passwd:
+            print("\t" + getString("token_is_empty"))
 
-        pass
+            passWasNone = (passwd == None)
+            passwd = input("\t" + getString("input_token"))
+            while len(passwd) == 0:
+                passwd = input("\t" + getString("input_token"))
+
+            name = input("\t" + getString("input_secret_name"))
+            if len(name) == 0:
+                print("\tUnnamed")
+                name = "Unnamed"
+
+            obj = { 
+                "discord_client_secret": passwd, 
+                "name": name
+            }
+
+            if passWasNone:
+                # Create secrets.json file
+                open("./secrets.json", "x")
+                self.logger.info("Created new secrets file (secrets.json)")
+            
+            json.dump(obj, open("./secrets.json", "w"))
+            self.secrets_file = "./secrets.json"
+            
+        elif SHOW_TOKEN or re.search(self.validationRe, input(getString("check_token"))):
+            print(getString("show_token").format(passwd))
+            if not re.search(self.validationRe, input(getString("is_token_ok"))):
+                passwd = input("\t" + getString("input_token"))
+                name = input("\t" + getString("input_secret_name"))
+                obj = { 
+                    "discord_client_secret": passwd, 
+                    "name": name
+                }
+                json.dump(obj, open("./secrets.json", "w"))    
 
 
     def toJson(self):
         return {
-            "max_fetch_files": self.max_fetch_files,
+            "max_fetch_size": self.max_fetch_size,
             "show_unhandled_messages": self.show_unhandled_messages,
             "exit_on_error": self.exit_on_error,
             "download_folder_path": self.download_folder_path,
@@ -220,28 +228,36 @@ class Config:
 
 
     def _loadConfig(self, rawJson):
-        template = {
-            "max_fetch_files": 0,
-            "show_unhandled_messages": False,
-            "exit_on_error": True,
-            "download_folder_path": "",
-            "show_skips": False,
-            "exit_after_command": False,
-            "language": "",
-            "secrets_file": ""
-        }
+        # Hard set attributes.
+        if "max_fetch_size" in rawJson:
+            self.max_fetch_size = rawJson["max_fetch_size"]
+            pass
+        if "show_unhandled_messages" in rawJson:
+            self.show_unhandled_messages = rawJson["show_unhandled_messages"]
+            pass
+        if "exit_on_error" in rawJson:
+            self.exit_on_error = rawJson["exit_on_error"]
+            pass
+        if "download_folder_path" in rawJson:
+            self.download_folder_path = rawJson["download_folder_path"]
+            pass
+        if "show_skips" in rawJson:
+            self.show_skips = rawJson["show_skips"]
+            pass
+        if "exit_after_command" in rawJson:
+            self.exit_after_command = rawJson["exit_after_command"]
+            pass
+        if "language" in rawJson:
+            self.language = rawJson["language"]
+            pass
+        if "secrets_file" in rawJson:
+            self.secrets_file = rawJson["secrets_file"]
+            pass
 
-        for attr in template:
-            if attr in rawJson:
-                self.attr = rawJson[attr]
-                self.logger.debug(f"self.{attr}: {self.attr}")
-            else:
-                self.logger.warning(f"Config is missing attribute {attr}, cannot load configuration file from JSON.")
-                return False
-            # If we reach here, then the config file has been loaded properly.
+        # If we reach here, then the config file has been loaded properly.
 
-        self.logger.debug("Self dict is empty")
         return True
+
 
     def getBool(self, config, key, default = False) -> bool:
         if key in config:
