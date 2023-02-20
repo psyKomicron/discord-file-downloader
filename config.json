@@ -1,1 +1,1 @@
-{"max_fetch_files": 1000, "show_unhandled_messages": false, "exit_on_error": true, "download_folder_path": "/home/psykomicron/Downloads", "show_skips": false, "exit_after_command": true, "language": "", "secrets_file": "./secrets.json"}
+{"max_fetch_files": 1000, "show_unhandled_messages": false, "exit_on_error": true, "download_folder_path": "/home/psykomicron/Projects/discord-file-downloader/downloads", "show_skips": false, "exit_after_command": true, "language": "", "secrets_file": ""}
