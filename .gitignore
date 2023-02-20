@@ -142,3 +142,6 @@ config.json
 
 # VIM temp files
 *.swp
+
+# Text editor
+.vscode
