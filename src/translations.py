@@ -8,7 +8,7 @@ strings = json.load(open("./strings.json"))
 langTag = "en-US"
 
 
-def get_string(tag: str) -> str:
+def getString(tag: str) -> str:
     return strings[langTag][tag]
 
 

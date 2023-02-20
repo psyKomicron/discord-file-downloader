@@ -6,9 +6,9 @@
         "received_message": "received message",
         "read_full_doc": "For full documentation look at {0}",
         "checking_login": "Checking login...",
-        "password_is_empty": "Connection token is empty, please provide a connection token: ",
+        "token_is_empty": "Connection token is empty, please provide a connection token: ",
         "login_failed": "Login failed.",
-        "input_password": "Password: ",
+        "input_token": "Token: ",
         "starting_configuration": "Starting configuration...",
         "show_token": "Connection token: {0}",
         "choose_download_folder": "Choose download location (current location {0}).\n\tPress ENTER to use default location: ",
@@ -26,7 +26,9 @@
         "printing_recap": "Recap:",
         "is_this_ok": "Is this ok ? Y(yes)/N(no) ",
         "config_saved": "Configuration saved",
-        "not_saving_config": "Configuration modifications discarded"
+        "not_saving_config": "Configuration modifications discarded",
+        "check_token": "Do you want to check the connection token ? ",
+        "is_token_ok": "Is this token ok ? "
     },
 
     "fr-FR": {
@@ -36,9 +38,9 @@
         "received_message": "message recu",
         "read_full_doc": "Pour lire la documentation complete, voir {0}",
         "checking_login": "Verification des identifiants...",
-        "password_is_empty": "Le token de connection est vide, veuillez le mettre a jour: ",
+        "token_is_empty": "Le token de connection est vide, veuillez le mettre a jour: ",
         "login_failed": "La connection a echouee.",
-        "input_password": "Mot de passe: ",
+        "input_token": "Token de connection: ",
         "starting_configuration": "Demarrage de la configuration...",
         "show_token": "Token de connection: {0}",
         "choose_download_folder": "Choisissez l'emplacement des fichiers telecharges (emplacement actuel: {0}).\n\tAppuyez sur entree pour utiliser l'emplacement par defaut: ",
@@ -56,6 +58,8 @@
         "printing_recap": "Resume:",
         "is_this_ok": "Tout est bon ? O(oui)/N(non) ",
         "config_saved": "Configuration sauvegardee",
-        "not_saving_config": "Configuration non sauvegardee"
+        "not_saving_config": "Configuration non sauvegardee",
+        "check_token": "Voulez vous verifier le token de connection ? ",
+        "is_token_ok": "Token ok ? "
     }
 }
