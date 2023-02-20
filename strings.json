@@ -18,7 +18,7 @@
         "using_default_download_folder": "Using default folder",
         "show_advanced_settings": "Do you want to configure advanced settings ? Y(yes)/N(no) ",
         "skipping_advanced_options": "Skipping advanced options",
-        "max_fetch_files_name": "Maximum number of files per fetch",
+        "max_fetch_files_name": "Maximum number of messages per fetch (affects performance, lower != better) ? ",
         "show_unhandled_messages_name": "Show unhandled messages",
         "exit_on_error_name": "Exit on error",
         "show_skips_name": "Show skipped messages (messages that don't match the search criteria for attachements)",
@@ -28,10 +28,18 @@
         "config_saved": "Configuration saved",
         "not_saving_config": "Configuration modifications discarded",
         "check_token": "Do you want to check the connection token ? ",
-        "is_token_ok": "Is this token ok ? "
+        "is_token_ok": "Is this token ok ? ",
+
+        "download_command_description": "Download",
+        "download_command_name": "download",
+        "download_command_count_name": "count",
+        "...": "...",
+        "clean_command_description": "Removes messages from the channel",
+        "clean_command_name": "clean",
+        "clean_command_failed_forbidden": "Application doesn't have the rights to delete messages -__-"
     },
 
-    "fr-FR": {
+    "fr": {
         "True": "oui",
         "False": "non",
         "bot_ready": "robot pret",
@@ -60,6 +68,14 @@
         "config_saved": "Configuration sauvegardee",
         "not_saving_config": "Configuration non sauvegardee",
         "check_token": "Voulez vous verifier le token de connection ? ",
-        "is_token_ok": "Token ok ? "
+        "is_token_ok": "Token ok ? ",
+        
+        "download_command_description": "Telecharge les images et videos du salon",
+        "download_command_name": "download",
+        "download_command_count_name": "nombres de fichiers",
+        "...": "...",
+        "clean_command_description": "Supprime des messages du salon",
+        "clean_command_name": "clean",
+        "clean_command_failed_forbidden": "L'application n'as pas les droits pour supprimer des messages -__-"
     }
 }
