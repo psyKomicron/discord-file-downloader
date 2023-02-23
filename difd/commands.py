@@ -1,13 +1,15 @@
 from logging import Logger
 from typing import *
 import discord
-from discord import Client, Intents, Interaction, HTTPException, Forbidden
 import discord.app_commands
+from discord import Client, Intents, Interaction, HTTPException, Forbidden
 from discord.app_commands import CommandTree
 import re
-import src.config as config
-from src.config import Config
-import src.translations as translations 
+import difd.config as config
+from difd.config import Config
+import difd.translations as translations
+import requests
+import io
 
 
 class CommandHandler(Client):
@@ -31,7 +33,18 @@ class CommandHandler(Client):
         @self.commandTree.command(name="boobies", description="(.)Y(.)", guild=discord.Object(id=guild))
         async def boobies(interaction: Interaction):
             # Bob :)
-            await interaction.response.send_message("https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp")
+            get = requests.get("https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp")
+            interaction.command_failed = True
+            if get.ok:
+                file = get.content
+                try:
+                    await interaction.channel.send(content="Bob", file=io.BytesIO(file))
+                    interaction.command_failed = False
+                except Exception as ex:
+                    self.logger.warning(f"Failed to send https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp to discord.\n{ex}")
+            
+            if interaction.command_failed:
+                await interaction.response.send_message("bob")
 
         @self.commandTree.command(name="clean_command_name", description="clean_command_description", guild=discord.Object(id=guild))
         async def clean(interaction: Interaction, username:str = None):

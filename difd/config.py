@@ -1,8 +1,8 @@
 import genericpath
 import json
 import logging
-import src.translations as translations
-from src.translations import getString
+import difd.translations as translations
+from difd.translations import getString
 import os
 import re
 
