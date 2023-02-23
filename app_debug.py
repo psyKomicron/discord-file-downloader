@@ -1,10 +1,12 @@
 import logging
 import discord
 # This app
-import src.config as config
-from src.config import Config
-from src.commands import CommandHandler
+import difd.config as config
+from difd.config import Config
+from difd.commands import CommandHandler
 
+
+logging.basicConfig(format="%(levelname)s  %(name)-12s  %(message)-8s  ", level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -25,13 +27,11 @@ if __name__ == '__main__':
         def tab_print(s: str):
             print("\t-> {0}".format(s))
         conf.printOptions(tab_print)
-        if input("Update token ? y/n ") == "y":
-            conf.setupToken()
 
     logger.info("Connecting...")
+    input("")
 
     login = conf.getToken()
-
     intents = discord.Intents(messages = True, guilds = True, message_content = True) 
     bot = CommandHandler(intents=intents, guild=289090423031463936, config=conf, logger=logging.getLogger("CommandHandler"))
     bot.run(token=login)
