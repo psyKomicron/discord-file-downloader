@@ -1,15 +1,15 @@
-from logging import Logger
-from typing import *
 import discord
 import discord.app_commands
-from discord import Client, Intents, Interaction, HTTPException, Forbidden
-from discord.app_commands import CommandTree
 import re
-import difd.config as config
-from difd.config import Config
-import difd.translations as translations
 import requests
 import io
+import translations
+from logging import Logger
+from typing import *
+from discord import Client, Intents, Interaction, HTTPException, Forbidden
+from discord.app_commands import CommandTree
+from config import Config, RESOURCE_RE, VALID_FILES_RE
+from batcher import Batcher
 
 
 class CommandHandler(Client):
@@ -17,6 +17,7 @@ class CommandHandler(Client):
     commandTree: CommandTree
     config: Config
     logger: Logger
+    batcher: Batcher = Batcher(3, 20)
 
     def __init__(self, guild: int, config: Config, intents: Intents, logger: Logger, **options: Any) -> None:
         super().__init__(intents=intents, **options)
@@ -24,27 +25,20 @@ class CommandHandler(Client):
         self.config = config
         self.logger = logger
 
-        self.commandTree = CommandTree(self)
-        
+        self.batcher.downloadFolderPath = config.download_folder_path
+
+        self.commandTree = CommandTree(self)        
         @self.commandTree.command(name="download_command_name", description="download_command_description", guild=discord.Object(id=guild))
         async def download(interaction: Interaction, count: int):
-            await self.handleDownload(interaction)
+            try:
+                await self.handleDownload(interaction, count)
+            except Exception as ex:
+                self.logger.error(ex)
+                exit(-1)
 
         @self.commandTree.command(name="boobies", description="(.)Y(.)", guild=discord.Object(id=guild))
         async def boobies(interaction: Interaction):
-            # Bob :)
-            get = requests.get("https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp")
-            interaction.command_failed = True
-            if get.ok:
-                file = get.content
-                try:
-                    await interaction.channel.send(content="Bob", file=io.BytesIO(file))
-                    interaction.command_failed = False
-                except Exception as ex:
-                    self.logger.warning(f"Failed to send https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp to discord.\n{ex}")
-            
-            if interaction.command_failed:
-                await interaction.response.send_message("bob")
+            await self.handleBoobies(interaction)
 
         @self.commandTree.command(name="clean_command_name", description="clean_command_description", guild=discord.Object(id=guild))
         async def clean(interaction: Interaction, username:str = None):
@@ -52,44 +46,93 @@ class CommandHandler(Client):
                 await self.handleClean(interaction, username)
             except Forbidden:
                 await interaction.response.send_message(translations.getString("clean_command_failed_forbidden"), ephemeral=True)
-                pass
             except HTTPException as ex:
-                # TODO: Better login
+                # TODO: Better logging
                 logger.warning("Failed to delete messages")
-                pass
     
 
-    async def handleDownload(self, interaction: Interaction):
-        self.logger.info(f"Received {interaction.command.qualified_name} from {interaction.user.name}")
-        await interaction.response.send_message(
-            f"Downloading: {self.config.max_fetch_size} in {interaction.channel.name}", 
-            ephemeral=True
-        )
-        self.logger.info(f"Command args: {interaction.data}")
+    async def handleBoobies(self, interaction: Interaction):
+        # Bob :)
+        get = requests.get("https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp")
+        interaction.command_failed = True
+        if get.ok:
+            bytes = get.content
+            try:
+                await interaction.response.send_message("bob :)", file=discord.File(io.BytesIO(bytes), filename="booba.webp"))
+                #await interaction.channel.send(content="bob :)", file=discord.File(io.BytesIO(bytes), filename="booba.webp"))
+                interaction.command_failed = False
+            except Exception as ex:
+                self.logger.warning(f"Failed to send https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp to discord.")
+                self.logger.error(ex)
 
-        refex = config.RESOURCE_REGEX
+        if interaction.command_failed:
+            await interaction.response.send_message("bob :(")
+    
+
+    async def handleDownload(self, interaction: Interaction, count: int):
+        self.logger.info(f"Received {interaction.command.qualified_name} from {interaction.user.name}")
+        await interaction.response.defer(thinking=True)
         resources = []
+        i = 0
         async for message in interaction.channel.history(limit=self.config.max_fetch_size):
             if len(message.attachments):
                 # Get attachements
                 for attachement in message.attachments:
-                    resources.append(attachement.url)
-            elif refex.search(message.clean_content):
-                resources.append(message.clean_content)
+                    if VALID_FILES_RE.search(attachement.url):
+                        resources.append(attachement.url)
+                        self.logger.debug(f"[{self.config.max_fetch_size - i}] Added content from {message.author.name} '{attachement.filename}'")
+            else:
+                reMatches = RESOURCE_RE.search(message.clean_content)
+                if reMatches and len(reMatches.group()) > 0:
+                    for match in reMatches.group():
+                        if VALID_FILES_RE.search(match):
+                            resources.append(match)
+                            self.logger.debug(f"[{self.config.max_fetch_size - i}] Added resources from {message.author.name} '{match}'")
+            i += 1
+            if len(resources) > count:
+                i = -1
+                self.logger.debug("Found enough files, breaking fetch loop")
+                break 
+        if i == -1:
+            self.logger.info("Reached channel 0 message, cannot fetch more messages")
+        # TODO: i18n
+        if len(resources) > 0:
+            try:
+                await interaction.followup.edit_message(content=f"Found {len(resources)} files.\nStarting download... 🤔️")
+            except Exception as ex:
+                self.logger.warning("Failed to send user found files number feedback")
+                self.logger.error(ex)
+        else:
+            self.logger.warning("Nothing to download, exiting download command")
+            try:
+                await interaction.followup.edit_message(content=f"Nothing to download ! 😥️")
+            except Exception as ex:
+                self.logger.warning("Failed to send no file found feedback")
+                self.logger.error(ex)
+            return
 
-        interaction.response.send_message(f"Found {len(resources)}")
-
+        self.logger.info("Batching files...")
+        downloads = await self.batcher.batch(resources)
+        try:
+            rate = "{:.1f}%".format(self.batcher.successRate * 100)
+            await interaction.followup.send(content=f"✅️ ({rate} | {downloads}/{len(resources)})")
+        except Exception as ex:
+            self.logger.error(ex)
+            
 
     async def handleClean(self, interaction: Interaction, username: str = None):
         await interaction.response.pong()
         if username:
             """Deletes messages by username"""
             regEx = re.compile(username)
+            count = 0
             async for message in interaction.channel.history(limit=self.config.max_fetch_size):
                 if message and message.author and regEx.search(f"{message.author.name}#{message.author.discriminator}"):
-                    message.delete(delay=30)
-                    pass
-        pass
+                    # not awaiting
+                    await message.delete()
+                    count += 1
+            self.logger.info(f"Deleted {count} messages from {username} (requested by {interaction.user.display_name})")
+            interaction.response.send_message(translations.getString("deleted_x_messages").format(count))
     
 
     async def on_ready(self):
@@ -98,11 +141,13 @@ class CommandHandler(Client):
 
         commands = await self.commandTree.sync(guild=discord.Object(id=self.guild))
         if commands:
-            self.logger.info("Commands synced and ready.")
+            self.logger.info("Commands synced and ready")
+            s = []
             for command in commands:
                 options = ""
                 for option in command.options:
                     options += option.name
-                self.logger.info(f"\t- {command.name}({options})")
+                s.append(f"{command.name}: {options}")
+            self.logger.info("Available commands -> [" + ", ".join(s) + "]")
         else:
             self.logger.info("CommandTree.sync returned None")
