@@ -1,20 +1,48 @@
+__title__ = "DFiD"
+__author__ = "psykomicron"
+__version = (0, 0, 2)
+
 import genericpath
 import json
 import logging
-import difd.translations as translations
-from difd.translations import getString
+import translations
+from translations import getString
 import os
 import re
 
+
 # CONSTANTS
-REPO_PATH="https://github.com/psyKomicron/discord-file-downloader"
-VALID_FILES="\\.(jpg|png|bmp|gif|mp4|mp3|mov)$"
-SHOW_TOKEN=False
-LOG_LEVEL=logging.DEBUG
-CONFIG_PATH="./config.json"
 DEBUG=True
+
+REPO_PATH="https://github.com/psyKomicron/discord-file-downloader"
+"""Github repo."""
+
+SHOW_TOKEN=False
+"""Show discord connection token on startup."""
+
+LOG_LEVEL=logging.DEBUG
+"""Logging level."""
+
+CONFIG_PATH="./config.json"
+"""Configuration file path."""
+
+SECRET_PATH="./secrets.json"
+"""Discord token file path."""
+
 APP_NAME="DFiD (Discord file downloader)"
-RESOURCE_REGEX=re.compile(r"(https?: \/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})", re.IGNORECASE)
+"""Application name"""
+
+RESOURCE_RE=re.compile(r"(https?: \/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})", re.IGNORECASE)
+"""Resource regex. Matches urls pointing to files."""
+
+VALID_FILES_RE=re.compile(r"\\.(jpg|png|bmp|gif|mp4|mp3|mov)$", re.IGNORECASE)
+"""Regex to check files extensions to find if the file should be downloaded."""
+
+FILE_EXT_RE=re.compile(r'\.[A-z0-9]+$')
+"""Regex to check if a string is a valid file name."""
+
+HASH_FILENAMES=True
+"""Whether or not to hash file names when downloading (can avoid collisions)."""
 
 
 class Config:
@@ -29,15 +57,14 @@ class Config:
     secrets_file: str = ""
     validationRe = re.compile("y|yes|true|false|oui|o", re.IGNORECASE)
         
-
     def __init__(self) -> None:
         self.logger.setLevel(logging.DEBUG)
         logging.basicConfig(level=logging.DEBUG)
     
 
     def openConfig(self) -> None:
-        if genericpath.exists("./config.json"):
-            rawJson = json.load(open("./config.json"))
+        if genericpath.exists(CONFIG_PATH):
+            rawJson = json.load(open(CONFIG_PATH))
             # Check config file to see if it is empty/defaulted.
             if len(set(rawJson.keys())) > 0 and len(set(rawJson.values())) > 0:
                 # Configuration file is NOT empty.
@@ -71,7 +98,7 @@ class Config:
         self.setupToken()
 
         # Ask user for the download folder.
-        currentPath = os.path.abspath("./downloads")
+        currentPath = os.path.abspath("./difd/downloads")
         while True:
             downloadPath = input(getString("choose_download_folder").format(currentPath))
             if not downloadPath:
@@ -148,20 +175,18 @@ class Config:
 
 
     def getToken(self) -> str:
-        if genericpath.exists("./secrets.json"):
-            secretsFile = json.load(open("./secrets.json"))
+        if genericpath.exists(SECRET_PATH):
+            secretsFile = json.load(open(SECRET_PATH))
             if "discord_client_secret" in secretsFile:
                 if "name" in secretsFile:
                     name = secretsFile["name"]
                     self.logger.info(f"Loading secret {name}")
                 else:
                     self.logger.warning("Secret is unnamed, it is possible that the secrets file does not have the correct format")
-
                 secret = secretsFile["discord_client_secret"]
                 if secret == None:
                     self.logger.critical("Secrets file doesn't have secret, the app cannot login to Discord without it.")
                     #TODO: Raise exception to inform the user.
-
                 return secret
         else:
             return None
