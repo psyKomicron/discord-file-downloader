@@ -1,13 +1,16 @@
 import logging
 import json
+import config
 from discord.app_commands import Translator, locale_str, TranslationContextTypes
 from discord import Locale
 from typing import *
 
 
-logger = logging.getLogger(__name__)
+TRANSLATIONS_FILE_PATH = "./strings.json"
+"""Path to the translations file."""
 
-strings = json.load(open("./strings.json"))
+logger = logging.getLogger("difd.translations")
+strings = json.load(open(TRANSLATIONS_FILE_PATH))
 langTag = "en-US"
 
 
