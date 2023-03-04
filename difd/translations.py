@@ -40,12 +40,9 @@ class Translator2(Translator):
         string: str = locale_string.message
         if tag in strings and string in strings[tag]:
             return strings[tag][string]
-        else:
+        elif False:
             if locale not in strings:
                 logger.warning(f"Translation request could not be fullfilled, locale '{locale}' is not supported")
-                pass
             else:
                 logger.warning(f"Translation request could not be fullfilled '{locale}' doesnt have {string}")
-                pass
-
             return None

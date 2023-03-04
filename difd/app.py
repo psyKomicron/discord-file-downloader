@@ -13,9 +13,8 @@ logging.basicConfig(level=config.LOG_LEVEL, handlers=[streamHandler])
 # Main
 if __name__ == '__main__':    
     logger = logging.getLogger("difd.main")
-    print(f"{config.APP_NAME}\n({config.REPO_PATH})")
+    print(f"{config.APP_NAME} version {'.'.join(str(i) for i in config.__version__)}\n({config.REPO_PATH})")
     logger.info(f"<< Running discord.py version {discord.version_info.major}.{discord.version_info.minor}.{discord.version_info.micro} ({discord.version_info.releaselevel}) >>")
-
     conf = Config()
     conf.openConfig()
 

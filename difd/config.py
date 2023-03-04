@@ -1,6 +1,6 @@
 __title__ = "DFiD"
 __author__ = "psykomicron"
-__version = (0, 0, 2)
+__version__ = (0, 0, 4)
 
 import genericpath
 import json
@@ -12,7 +12,7 @@ import re
 
 
 # CONSTANTS
-DEBUG=True
+DEBUG=False
 
 REPO_PATH="https://github.com/psyKomicron/discord-file-downloader"
 """Github repo."""
@@ -20,7 +20,7 @@ REPO_PATH="https://github.com/psyKomicron/discord-file-downloader"
 SHOW_TOKEN=False
 """Show discord connection token on startup."""
 
-LOG_LEVEL=logging.DEBUG
+LOG_LEVEL=logging.DEBUG if DEBUG else logging.INFO
 """Logging level."""
 
 CONFIG_PATH="./config.json"
@@ -35,7 +35,7 @@ APP_NAME="DFiD (Discord file downloader)"
 RESOURCE_RE=re.compile(r"(https?: \/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})", re.IGNORECASE)
 """Resource regex. Matches urls pointing to files."""
 
-VALID_FILES_RE=re.compile(r"\\.(jpg|png|bmp|gif|mp4|mp3|mov)$", re.IGNORECASE)
+VALID_FILES_RE=re.compile(r".*(\\.jpg|png|bmp|gif|mp4|mp3|mov)$", re.IGNORECASE)
 """Regex to check files extensions to find if the file should be downloaded."""
 
 FILE_EXT_RE=re.compile(r'\.[A-z0-9]+$')
@@ -46,7 +46,7 @@ HASH_FILENAMES=True
 
 
 class Config:
-    logger: logging.Logger = logging.getLogger(__name__)
+    logger: logging.Logger = logging.getLogger("difd.config")
     max_fetch_size: int = 0
     show_unhandled_messages: bool = False
     exit_on_error: bool = True
