@@ -1,6 +1,29 @@
 # **Change log**
+# 0.0.2
+## Changes
+- Added batch download, to more efficiently download a large number of files.
+- Added more config constants.
+- `app.py` has been moved to `./difd` and imports have been refactored to account for that.
+- More structural changes not listed.
 
-# 0.0.1 (Current)
+## Fixes
+- Potential timeout error when downloading big files (should not have happened since discord only allows small files).
+- Actually choosing files when downloading resources (using `config.VALID_FILE_RE` and `config.RESOURCE_RE`).
+- Fixed download command not downloading the wanted number of messages (even if there was enough files in one fetch).
+
+## Bugs
+- The bot doesn't actually download the wanted number of files, neither does it parse the wanted number of files. It actually only fetches `config.json[max_fetch_files]` and then tries to find valid files or resources in those messages.
+- If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
+- Config will fail often.
+
+## Todo
+- [X] Handle messages.
+- [X] Download images.
+- [ ] Easier and prettier config.
+- [ ] More robust config and token handling. *still not robust enough*
+
+
+# 0.0.1 
 ## Changes
 - Removed LocalClient, main will handle all logic.
 - Created auto config to guide the user through the configuration process.
