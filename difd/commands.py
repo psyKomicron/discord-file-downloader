@@ -18,7 +18,7 @@ class CommandHandler(Client):
     commandTree: CommandTree
     config: Config
     logger: Logger
-    batcher: Batcher = Batcher(5, 1000)
+    batcher: Batcher = Batcher(10, 1000)
 
     def __init__(self, guild: int, config: Config, intents: Intents, logger: Logger, **options: Any) -> None:
         super().__init__(intents=intents, **options)
@@ -31,11 +31,13 @@ class CommandHandler(Client):
         self.commandTree = CommandTree(self)        
         @self.commandTree.command(name="download_command_name", description="download_command_description", guild=discord.Object(id=guild))
         async def download(interaction: Interaction, count: int):
-            try:
-                await self.handleDownload(interaction, count)
-            except Exception as ex:
-                self.logger.error(ex)
-                exit(-1)
+            if self._userAllowed(interaction.user):
+                try:
+                    await self.handleDownload(interaction, count)
+                except Exception as ex:
+                    self.logger.error(ex)
+            else:
+                self.logger.debug(f"{interaction.user.name}#{interaction.user.discriminator} not allowed to use download command")
 
         @self.commandTree.command(name="boobies", description="(.)Y(.)", guild=discord.Object(id=guild))
         async def boobies(interaction: Interaction):
@@ -50,6 +52,7 @@ class CommandHandler(Client):
             except HTTPException as ex:
                 # TODO: Better logging
                 logger.warning("Failed to delete messages")
+                logger.error(ex)
     
 
     async def handleBoobies(self, interaction: Interaction):
@@ -96,7 +99,6 @@ class CommandHandler(Client):
                 self.logger.debug("Found enough files, breaking fetch loop")
                 break
             lastFetchedMessage = message
-
         # If we havent found enough files with a simple fetch, fall back to fetching messages manually and checking for files for every message in the channel.
         if len(resources) < count:
             self.logger.info(f"Fetching more messages to find enough files to satisfy the request")
@@ -124,15 +126,13 @@ class CommandHandler(Client):
                         break
                     lastFetchedMessage = message
                 else:
-                    self.logger.debug("Reached end of channel, breaking fetch loop")
+                    self.logger.info("Reached end of channel, no more messages available")
                     break
         self.logger.debug(f"Fetched total of {c} messages")
-                        
         # TODO: i18n
         if len(resources) > 0:
             try:
-                #await interaction.followup.send(content=f"Found {len(resources)} files.\nStarting download... 🤔️", ephemeral=True)
-                pass
+                await interaction.followup.send(content=f"Found {len(resources)} files.\nStarting download... 🤔️", ephemeral=True)
             except Exception as ex:
                 self.logger.warning("Failed to send user found files number feedback")
                 self.logger.error(ex)
@@ -144,7 +144,6 @@ class CommandHandler(Client):
                 self.logger.warning("Failed to send no file found feedback")
                 self.logger.error(ex)
             return
-
         self.logger.info("Batching files...")
         downloads = await self.batcher.batch(resources)
         try:
@@ -185,3 +184,7 @@ class CommandHandler(Client):
             self.logger.info("Available commands -> [" + ", ".join(s) + "]")
         else:
             self.logger.info("CommandTree.sync returned None")
+
+
+    def _userAllowed(self, user: discord.User) -> bool:
+        return f"{user.name}#{user.discriminator}" in self.config.allowed_users
