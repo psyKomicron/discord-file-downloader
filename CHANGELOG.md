@@ -21,6 +21,7 @@
 - [X] Download images.
 - [ ] Easier and prettier config.
 - [ ] More robust config and token handling. *still not robust enough*
+- [ ] Handle exceptions and forbidden channels.
 
 
 # 0.0.1 
