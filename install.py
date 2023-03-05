@@ -9,9 +9,8 @@ import os
 import io
 
 REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
-            #"https://github.com/psyKomicron/discord-file-downloader.git"
 SIMPLER_DOWNLOADER = True
-DEBUG = True
+DEBUG = False
 PYTHON_PREFIX = "python3.11"
 EXIT_ON_FAILED_DEPENDENCY_INSTALL = False
 USE_GIT = False
@@ -19,10 +18,8 @@ API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/rele
 
 def mkdir(path: str) -> bool:
     if os.name == "posix":
-        if platform.system() == "Darwin":
+        if platform.system() in ["Darwin", "Linux"]:
             # MacOS
-            pass
-        if platform.system() == "Linux":
             return os.system(f"mkdir {path}") == 0
     else:
         return False
@@ -72,7 +69,7 @@ downloadPath = ""
 if input("Download in current directory ? [y/n] ") == "n":
     downloadPath = input("\tDesired path ? ")
 else:
-    downloadPath = "./test/"
+    downloadPath = "./"
 
 if not os.path.exists(downloadPath):
     print(f"ERROR: {downloadPath} doesn't exists.")
@@ -81,7 +78,7 @@ if not os.path.exists(downloadPath):
             exit(-2)
     else:
         exit(-1)
-elif DEBUG:
+elif DEBUG and downloadPath != "./":
     if input("Do you want to clean output directory ? [y/n] ") == "y":
         os.rmdir(downloadPath)
         if not mkdir(downloadPath): 
@@ -134,10 +131,6 @@ else:
     downloadUrl = asset["browser_download_url"]
     print(f"Downloading latest release ({name} {tag})...")
     os.system(f"curl -LJO {downloadUrl}")
-    #r = http.request("GET", downloadUrl)
-    #if r.status != 200:
-    #    print("Failed to download latest DiFD release.")
-    #    exit(-1)
     if not os.path.exists(fileName):
         print(f"{fileName} doesn't exists.")
         exit(-1)
@@ -145,7 +138,8 @@ else:
     shutil.unpack_archive(fileName)
     os.chdir(f"./{fileName[:-4]}/difd/")
     installDependencies("config.py")
-    if input("Do you want to start the app ? [y/n]") == "y":
+    if input("Do you want to start the app ? [y/n] ") == "y":
+        print("Bye bye ! :)")
         os.system(f"{PYTHON_PREFIX} app.py")
     else:
         print("Bye bye ! :)")
