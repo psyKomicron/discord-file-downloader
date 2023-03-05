@@ -1,8 +1,12 @@
 import os
 import sys
 import shutil
+import json
+import urllib3
 import importlib.util
 import platform
+import os
+import io
 
 REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
             #"https://github.com/psyKomicron/discord-file-downloader.git"
@@ -11,6 +15,7 @@ DEBUG = True
 PYTHON_PREFIX = "python3.11"
 EXIT_ON_FAILED_DEPENDENCY_INSTALL = False
 USE_GIT = False
+API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/releases/latest"
 
 def mkdir(path: str) -> bool:
     if os.name == "posix":
@@ -18,7 +23,7 @@ def mkdir(path: str) -> bool:
             # MacOS
             pass
         if platform.system() == "Linux":
-            return os.system(f"mkd  ir {path}") == 0
+            return os.system(f"mkdir {path}") == 0
     else:
         return False
     
@@ -36,20 +41,51 @@ def checkInstall(command: str) -> None:
             exit()    
         print(f"Successfully installed {command}.")
     
+def installDependencies(configPyPath: str) -> None:
+    spec = importlib.util.spec_from_file_location("config", configPyPath)
+    config = importlib.util.module_from_spec(spec)
+    sys.modules["config"] = config
+    spec.loader.exec_module(config)
+    dependencies: list[str] = config.DEPENDENCIES
+    print("Installing required packages...")
+    print(f"Using {PYTHON_PREFIX}")
+    installedDeps = []
+    for dependency in dependencies:
+        print(f"Installing {dependency}...")
+        if os.system(f"{PYTHON_PREFIX} -m pip install {dependency}") != 0:
+            print(f"Failed to install {dependency}, you will need to install it before running DiFD.")
+            if EXIT_ON_FAILED_DEPENDENCY_INSTALL: exit(-1)
+        installedDeps.append(dependency)
+    if len(installedDeps) != len(dependencies):
+        print("Missing dependencies:")
+        for dep in dependencies:
+            if dep not in installedDeps:
+                print(f"\t- {dep}")
+    elif len(installedDeps) == 0:
+        print(f"Nothing installed. Check you internet connection or try the installation steps manually.")
+    else:
+        print("Successfully installed:\n - " + "\n - ".join(installedDeps))
+
 
 print("DiFD installer by psyKomicron")
 downloadPath = ""
-if input("Download in current directory ? [y/n] ") == "y":
-    downloadPath = "./"
-else:
+if input("Download in current directory ? [y/n] ") == "n":
     downloadPath = input("\tDesired path ? ")
+else:
+    downloadPath = "./test/"
 
 if not os.path.exists(downloadPath):
     print(f"ERROR: {downloadPath} doesn't exists.")
     if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
-        mkdir(downloadPath)
+        if not mkdir(downloadPath):
+            exit(-2)
     else:
         exit(-1)
+elif DEBUG:
+    if input("Do you want to clean output directory ? [y/n] ") == "y":
+        os.rmdir(downloadPath)
+        if not mkdir(downloadPath): 
+            exit(-2)
 
 if USE_GIT:
     checkInstall("git")
@@ -74,29 +110,44 @@ if USE_GIT:
             print(f"{configPyPath} not found, impossible to download dependencies.")
             exit(-1)
         # Dynamic import for config.py
-        spec = importlib.util.spec_from_file_location("config", configPyPath)
-        config = importlib.util.module_from_spec(spec)
-        sys.modules["config"] = config
-        spec.loader.exec_module(config)
-        dependencies: list[str] = config.DEPENDENCIES
-        print("Installing required packages...")
-        print(f"Using {PYTHON_PREFIX}")
-        installedDeps = []
-        for dependency in dependencies:
-            print(f"Installing {dependency}...")
-            if os.system(f"{PYTHON_PREFIX} -m pip install {dependency}") != 0:
-                print(f"Failed to install {dependency}, you will need to install it before running DiFD.")
-                if EXIT_ON_FAILED_DEPENDENCY_INSTALL: exit(-1)
-            installedDeps.append(dependency)
-        if len(installedDeps) != len(dependencies):
-            print("Missing dependencies:")
-            for dep in dependencies:
-                if dep not in installedDeps:
-                    print(f"\t- {dep}")
-        elif len(installedDeps) == 0:
-            print(f"Nothing installed. Check you internet connection or try the installation steps manually.")
-        else:
-            print("Successfully installed\n\t" + "\n\t- ".join(installedDeps))
+        installDependencies(configPyPath)        
 else:
+    os.chdir(downloadPath)
+    print(f"Current dir: {os.path.abspath('./')}")
     checkInstall("curl")
+    # Perform GET request.
+    http = urllib3.PoolManager()
+    r = http.request("GET", API_URL)
+    if r.status != 200:
+        print("Failed to contact GitHub API to get latest DiFD release.")
+        exit(-1)
+    response = json.load(io.BytesIO(r.data))
+    if "assets" not in response:
+        print("Not assets found in latest release, nothing to download.")
+        exit()
+    tag = response["tag_name"]
+    name = response["name"]
+    assets = response["assets"]
+    asset = assets[0]
+    fileName = asset["name"]
+    contentType = asset["content_type"]
+    downloadUrl = asset["browser_download_url"]
+    print(f"Downloading latest release ({name} {tag})...")
+    os.system(f"curl -LJO {downloadUrl}")
+    #r = http.request("GET", downloadUrl)
+    #if r.status != 200:
+    #    print("Failed to download latest DiFD release.")
+    #    exit(-1)
+    if not os.path.exists(fileName):
+        print(f"{fileName} doesn't exists.")
+        exit(-1)
+    print(f"Unpacking {fileName}...")
+    shutil.unpack_archive(fileName)
+    os.chdir(f"./{fileName[:-4]}/difd/")
+    installDependencies("config.py")
+    
+    if input("Do you want to start the app ? [y/n]") == "y":
+        os.system(f"{PYTHON_PREFIX} app.py")
+    else:
+        print("Bye bye ! :)")
     
