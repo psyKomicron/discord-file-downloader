@@ -1,4 +1,28 @@
 # **Change log**
+# 0.0.3
+## Changes
+- Refactored `config.py` to move `Config` class to `autoconfig.py` (fixes recursive dependency between `translations.py` and `config.py`). Thus refactored files dependent upon `config.py`
+- Created `install.py` (script) to download the app from GitHub using `git` and download python dependencies.
+- Updated `README.md`
+- Added `DEPENDENCIES` in `config.py` for installer.
+- Added `allowed_users` to config and but not configuration steps. The user will need to manually set this field.
+
+## Fixes
+- The bot now fetches the right number of files, until the end of the channel if necessary.
+
+## Bugs
+- If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
+- Config will fail often.
+
+## Todo
+- [X] Handle messages.
+- [X] Download images.
+- [ ] Easier and prettier config.
+- [ ] More robust config and token handling. *still not robust enough*
+- [ ] Handle exceptions and forbidden channels.
+- [ ] Config needs to configure `allowed_users`.
+
+
 # 0.0.2
 ## Changes
 - Added batch download, to more efficiently download a large number of files.
@@ -22,6 +46,7 @@
 - [ ] Easier and prettier config.
 - [ ] More robust config and token handling. *still not robust enough*
 - [ ] Handle exceptions and forbidden channels.
+- [ ] Config needs to configure `allowed_users`.
 
 
 # 0.0.1 

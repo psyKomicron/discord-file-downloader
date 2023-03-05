@@ -1,35 +1,56 @@
-**This README is currently not up to date with the actual project. The packages requirements will probably remain the same, but other configuration steps are to be ignored since the project is being heavily modified there.**
-
-
 # FR
-# discord-file-downloader
-Telecharge des fichiers de messages Discord.
+# discord-file-downloader (simpler downloader)
+Télécharge des fichiers multimédia dans un salon Discord.
 ## How-to
-- Pour télécharger des fichiers, depuis Discord tapez ` !get-images` dans le salon textuel duquel vous voulez télécharger des fichiers. Une fois le message envoyé, l’application téléchargera les fichiers en vous informant du progrès via la console.
+- Pour télécharger des fichiers, depuis Discord tapez `/download` dans le salon textuel duquel vous voulez télécharger des fichiers. Une fois le message envoyé, l’application téléchargera les fichiers en vous informant du progrès via la console.
 - Pour lancer l’application, assurez-vous que vous avez suivi les [étapes d’installation](#Installation). Ouvrez un terminal puis naviguez si besoin est à la racine de l’application. Tapez ensuite `python3 app.py` pour démarrer l’application, vous devriez avoir le message suivant dans la console
   
   ```
-  bot > logged in as [bot name], waiting for command
+  DFiD (Discord file downloader) version 0.0.4
+  (https://github.com/psyKomicron/discord-file-downloader)
   ```
 
+`Ceci indique que ce sont des commandes a taper dans un terminal de commandes`
+
 ## Installation
+- Vérifiez que python version 3.11 ou supérieur est bien installé : 
+    - `python3 --version` -> Python 3.11.0rc1
+
+
+**Installation via le script**
+- `wget https://github.com/psyKomicron/discord-file-downloader/tree/install.py`
+- `python3 install.py`
+
+**Installation depuis GitHub**
 - `git clone https://github.com/psyKomicron/discord-file-downloader.git`
-- Vérifiez que python version 3 ou supérieur est bien installé. `python3 --version`
-- Installez [discord.py](https://discordpy.readthedocs.io/en/stable/intro.html) via `pip` ou un autre outil.
-- Installez [requests](https://docs.python-requests.org/en/latest/user/install/#install) via `pip` ou un autre outil. **ne pas oubliez d'utiliser python3 pour installer (python3 au lieu de python ou py)**
-- Renommez `secrets template.json` en `secrets.json` remplissez le champ `"discord_client_secret"`.
-- Mettez en place le fichier de configuration selon vos besoins. (`config.json`).Tutoriel -> [Configuration](#Configuration).
+- Installez [discord.py](https://discordpy.readthedocs.io/en/stable/intro.html) via `pip` ou un autre outil :
+    - `pip install discord.py`
+- Installez [aiohttp](https://pypi.org/project/aiohttp/) via `pip` ou un autre outil :
+    - `pip install aiohttp`
+
+**Même chose pour les deux installations**
+- La configuration des options se fera automatiquement si besoin.
 
 ## Paramétrage de répertoire
 ```
 discord-file-downloader/
-├── config.json
-├── secrets.json
-├── app.py
-├── LocalClient.py
-└── .gitignore
-  ``` 
-  *le fichier `.gitignore` n'est pas nécessaire au fonctionnement de l'application.*
+.
+├── CHANGELOG.md
+├── difd
+│   ├── app.py
+│   ├── batcher.py
+│   ├── commands.py
+│   ├── config.py
+│   ├── console.py
+│   ├── secrets.json
+│   ├── strings.json
+│   └── translations.py
+├── downloads
+│   └── 
+├── README.md
+└── secrets template.json
+```
+*les fichier `.gitignore`, `README.md`, `CHANGELOG.md` ne sont pas nécessaires au fonctionnement de l'application.*
 
 ## Configuration
 La configuration de l’application est gérée par le fichier `config.json`.
@@ -40,26 +61,18 @@ Par exemple, si `max_fetch_files` est paramétré a 100 l’application collecte
 
 **Cela ne veut pas dire que l’application va télécharger 100 fichiers. Certains messages n’auront pas de fichiers valides, certains en auront plus d’un**
 
-### `show_unhandled_messages`
-Affiche un message dans la console chaque fois qu’un message est reçu par l’application.
-
 ### `exit_on_error`
 Lors de la collection des messages et du téléchargement des fichiers par l’application, une erreur peut se produire (fichier corrompu, lien de téléchargement cassé…).
 - `True` l’application cessera son exécution lors d’une erreur.
 - `False` l’application continuera de tourner.
 
 ### `download_folder_path`
-Le chemin, absolu ou relatif, vers le répertoire ou les fichiers téléchargés seront sauvegardés. Si le répertoire n’existe pas, l’application le créera.
+Le chemin absolu, vers le répertoire ou les fichiers téléchargés seront sauvegardés.
 
 ### `valid_files`
 Expression régulière que chaque fichier doit vérifier pour être téléchargé.
 
-*Note : l’expression régulière est appliquée au lien de téléchargement et non au nom du fichier seulement.*
-
-### `show_skips`
-Affiche dans la console les fichiers (lien du fichier) qui ne vérifient pas `valid_files`.
-- `True` pour afficher ces fichiers.
-- `False` pour les ignorer.
+*Note : l’expression régulière est appliquée au lien de téléchargement et non au **nom** du fichier seulement.*
 
 ### `exit_after_command`
 - `True` l'application se fermera une fois les téléchargements effectués.
@@ -67,21 +80,21 @@ Affiche dans la console les fichiers (lien du fichier) qui ne vérifient pas `va
 
 
 ## Connection
-L'application a besoin d'un 'token' de connection afin de pouvoir communiquer avec Discord. Ce token sera demande au premier demarrage de l'application et sera stockee dans le fichier `secrets.json` ensuite. Si ce fichier est supprime ou que le 'token' de connection n'est plus present dans le fichier l'application vous le redemandera afin de pouvoir se connecter.
+L'application à besoin d'un 'token' de connection afin de pouvoir communiquer avec Discord. Ce token sera demandé au premier démarrage de l'application et sera stocké dans le fichier `secrets.json` ensuite. Si ce fichier est supprimé ou que le 'token' de connection n'est plus présent dans le fichier l'application vous le redemandera afin de pouvoir se connecter.
 
-Si le fichier `secrets.json` est deja cree lors du premier demarrage, le token de connection sera directement recupere dans le fichier.
+Si le fichier `secrets.json` est deja créé lors du premier démarrage, le token de connection sera directement recupéré dans le fichier.
 
 Si l'application ne peut pas se connecter:
- - Le token de connection n'est pas present: renseignez a nouveau le token.
- - Le token est **invalide**: il faut regenerez un token de connection via le panneau **administrateur** de l'application.
- - Verifiez que votre ordinateur a acces a internet.
+ - Le token de connection n'est pas présent: renseignez a nouveau le token.
+ - Le token est **invalide**: il faut régénerer un token de connection via le panneau **administrateur** de l'application.
+ - Verifiez que votre ordinateur a accès à internet.
 
 
 # EN
-# discord-file-downloader
-Downloads files from discord messages. 
+# discord-file-downloader (simpler downloader)
+Downloads multimedia files from discord messages. 
 ## How-to
-- To download files, type `!get-images` in the Discord channel where you want to download images, and wait for the app to download them (application progress is show in the console).
+- To download files, type `/download` in the Discord channel where you want to download images, and wait for the app to download them (application progress is show in the console).
 - To start the application make sure you followed [installation steps](#Installation), then open a terminal in the application folder. Type `python3 app.py` to start the app, you should get :
   
   ```
@@ -100,16 +113,27 @@ Downloads files from discord messages.
 ## Directory set-up
 ```
 discord-file-downloader/
-├── config.json
-├── secrets.json
-├── app.py
-├── LocalClient.py
-└── .gitignore
-  ``` 
-  *the `.gitignore` file is not required nor used by the app, but you will download it when you clone the repository*
+.
+├── CHANGELOG.md
+├── difd
+│   ├── app.py
+│   ├── batcher.py
+│   ├── commands.py
+│   ├── config.py
+│   ├── console.py
+│   ├── secrets.json
+│   ├── strings.json
+│   └── translations.py
+├── downloads
+│   └── 
+├── README.md
+└── secrets template.json
+```
+*`.gitignore`, `CHANGELOG.md`, `README.md` files are not required nor used by the app, but you will download it when you clone the repository*
 
 ## Configuration
-The configuration for the app is handled by the `config.json` file.
+The configuration for the app is handled by the `config.json` file and done by the application when needed.
+
 ### `max_fetch_files`:
 Maximum number of files to fetch when looking to download files. The app fetches `max_fetch_files` when the `!get-images` command is received, then parse those messages to search for files.
 
@@ -117,22 +141,11 @@ For example if you set it to 100, the app will fetch the last 100 messages in th
 
 **This does not mean that it will download 100 files. some messages may not have files attached, some may have more than 1 file attached**
 
-### `show_unhandled_messages`
-Prints a message in the console everytime the app receives a message.
-
 ### `exit_on_error`
 When downloading files errors/exceptions may be raised. Set this property to `True` if you want the app to exit when this happens, set it to `False` to just keep the application running
 
 ### `download_folder_path`
 The path, absolute or relative, to the folder where you want the downloaded files to go. If the folder does not exists, it will be created.
-
-### `valid_files`
-Regular expression that every file must match. *Note : the regular expression will be tested on the download url, not on the file name itself.*
-
-### `show_skips`
-Show the files (download url) that do not match `valid_files`.
-- `True` if you want to show those files.
-- `False` if you want to ignore those files.
 
 ### `exit_after_command`
 - `True` the application once the command `!get-images` has completed will exit.
