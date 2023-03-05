@@ -135,6 +135,7 @@ config.json
 *.mp3
 *.bmp
 *.mp4
+*.json
 
 
 # Pyre type checker
@@ -145,5 +146,3 @@ config.json
 
 # Text editor
 .vscode
-
-test
