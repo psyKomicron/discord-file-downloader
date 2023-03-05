@@ -145,7 +145,6 @@ else:
     shutil.unpack_archive(fileName)
     os.chdir(f"./{fileName[:-4]}/difd/")
     installDependencies("config.py")
-    
     if input("Do you want to start the app ? [y/n]") == "y":
         os.system(f"{PYTHON_PREFIX} app.py")
     else:
