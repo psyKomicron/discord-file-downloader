@@ -2,12 +2,25 @@
 # 0.0.4
 ## Changes
 - Added option to download the latest release from GitHub when using `install.py`.
+- Added `try/catch` when syncing commands.
+    - If `exit_on_error` is set to `True` the application will exit if it failed to sync.
+- Only using specific guild when `DEBUG` is set to `True`. 
+- Updated default download directory to `./downloads` (from `./difd/downloads`).
+- Added `allowed_users` to config and but not configuration steps. The user will need to manually set this field.
 
 ## Fixes
+- Fixed error while syncing methods. The bot was trying to sync commands in a guild it did not have access to.
 
 ## Bugs
 - If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
-- Config will fail often.
+
+## Todo
+- [X] Handle messages.
+- [X] Download images.
+- [ ] Easier and prettier config.
+- [ ] More robust config and token handling. *still not robust enough*
+- [ ] Handle exceptions and forbidden channels.
+- [X] Config needs to configure `allowed_users`.
 
 
 # 0.0.3
@@ -16,7 +29,6 @@
 - Created `install.py` (script) to download the app from GitHub using `git` and download python dependencies.
 - Updated `README.md`
 - Added `DEPENDENCIES` in `config.py` for installer.
-- Added `allowed_users` to config and but not configuration steps. The user will need to manually set this field.
 
 ## Fixes
 - The bot now fetches the right number of files, until the end of the channel if necessary.
@@ -32,7 +44,6 @@
 - [ ] More robust config and token handling. *still not robust enough*
 - [ ] Handle exceptions and forbidden channels.
 - [ ] Config needs to configure `allowed_users`.
-
 
 # 0.0.2
 ## Changes

@@ -85,6 +85,7 @@
         "bot_working": "ça travaille...",
         "invalid_discord_username": "Invalid Discord username.",
         "configure_allowed_users": "Configurer les utilisateurs autorisés ? [o/n] ",
-        "input_allowed_users": "Rentrez les noms d'utilisateurs séparés par un espace (ex: bob#1234 alice#4532 marie#21973): "
+        "input_allowed_users": "Rentrez les noms d'utilisateurs séparés par un espace (ex: bob#1234 alice#4532 marie#21973): ",
+        "allowed_users": "Utilisateurs enregistrés"
     }
 }

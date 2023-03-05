@@ -54,10 +54,10 @@ class Config:
         language = chosenLanguage
         print(getString("read_full_doc").format(REPO_PATH))
         print(getString("starting_configuration"))
-        # Ask user for login
+        # Ask user for login:
         self.setupToken()
-        # Ask user for the download folder.
-        currentPath = os.path.abspath("./difd/downloads")
+        # Ask user for the download folder:
+        currentPath = os.path.abspath("./downloads")
         while True:
             downloadPath = input(getString("choose_download_folder").format(currentPath))
             if not downloadPath:
@@ -71,8 +71,21 @@ class Config:
                 else:
                     print(getString("download_folder_not_found").format(downloadPath))
                     downloadPath = currentPath
-        #_updateConfig("download_folder_path", currentPath)
         self.download_folder_path = downloadPath
+        # Configure allowed users:
+        if self.validationRe.search(input(getString("configure_allowed_users"))):
+            allowedUsers = input(getString("input_allowed_users"))
+            if len(allowedUsers) > 0:
+                users = allowedUsers.split(' ')
+                if len(users) > 0:
+                    discordNameRe = re.compile("[A-z]+#[0-9]+")
+                    for user in users:
+                        if discordNameRe.match(user):
+                            self.allowed_users.append(user)
+                        else:
+                            print(getString("invalid_discord_username").format(user))
+                else:
+                    pass
         showAdvancedSettings = input(getString("show_advanced_settings"))
         if re.search(self.validationRe, showAdvancedSettings):
             # Max fetch files.
@@ -80,7 +93,6 @@ class Config:
             if not isinstance(maxFetch, int):
                 print(getString("not_a_number"))
                 raise Exception("Max fetch file is not a number.")
-            #_updateConfig("max_fetch_files", maxFetch)
             self.max_fetch_size = maxFetch
             # Show unhandled messages.
             showUnhandledMessages = re.search(self.validationRe, input(getString("show_unhandled_messages_name")))
@@ -108,7 +120,8 @@ class Config:
             getString("show_unhandled_messages_name") + ": " + getString(f"{self.show_unhandled_messages}") + "\n\t-" +
             getString("exit_on_error_name") + ": " + getString(f"{self.exit_on_error}") + "\n\t-" + 
             getString("show_skips_name") + ": " + getString(f"{self.show_skips}") + "\n\t-" +
-            getString("exit_after_command_name") + ": " + getString(f"{self.exit_after_command}")
+            getString("exit_after_command_name") + ": " + getString(f"{self.exit_after_command}") +
+            getString("allowed_users") + ": " + " ".join(self.allowed_users)
         )
         ok = re.search(self.validationRe, input(getString("is_this_ok")))
         if ok:

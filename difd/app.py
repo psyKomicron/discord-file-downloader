@@ -4,6 +4,7 @@ import config
 import console
 from autoconfig import Config
 from commands import CommandHandler
+from config import DEBUG
 
 
 streamHandler = logging.StreamHandler()
@@ -30,5 +31,5 @@ if __name__ == '__main__':
 
     login = conf.getToken()
     intents = discord.Intents(messages = True, guilds = True, message_content = True) 
-    bot = CommandHandler(intents=intents, guild=289090423031463936, config=conf, logger=logging.getLogger("CommandHandler"))
+    bot = CommandHandler(intents=intents, config=conf, logger=logging.getLogger("CommandHandler"))
     bot.run(token=login)

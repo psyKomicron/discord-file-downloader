@@ -22,16 +22,16 @@ class CommandHandler(Client):
     logger: Logger
     batcher: Batcher = Batcher(10, 1000)
 
-    def __init__(self, guild: int, config: Config, intents: Intents, logger: Logger, **options: Any) -> None:
+    def __init__(self, config: Config, intents: Intents, logger: Logger, **options: Any) -> None:
         super().__init__(intents=intents, **options)
-        self.guild = guild
+        # If we are running in debug mode, only use the bot in La-Famille.
+        self.guild = discord.Object(id=289090423031463936) if DEBUG else None
         self.config = config
         self.logger = logger
-
         self.batcher.downloadFolderPath = config.download_folder_path
 
         self.commandTree = CommandTree(self)        
-        @self.commandTree.command(name="download_command_name", description="download_command_description", guild=discord.Object(id=guild))
+        @self.commandTree.command(name="download_command_name", description="download_command_description", guild=self.guild)
         async def download(interaction: Interaction, count: int):
             if self._userAllowed(interaction.user):
                 try:
@@ -41,11 +41,7 @@ class CommandHandler(Client):
             else:
                 self.logger.debug(f"{interaction.user.name}#{interaction.user.discriminator} not allowed to use download command")
 
-        @self.commandTree.command(name="boobies", description="(.)Y(.)", guild=discord.Object(id=guild))
-        async def boobies(interaction: Interaction):
-            await self.handleBoobies(interaction)
-
-        @self.commandTree.command(name="clean_command_name", description="clean_command_description", guild=discord.Object(id=guild))
+        @self.commandTree.command(name="clean_command_name", description="clean_command_description", guild=self.guild)
         async def clean(interaction: Interaction, username:str = None):
             try:
                 await self.handleClean(interaction, username)
@@ -55,24 +51,6 @@ class CommandHandler(Client):
                 # TODO: Better logging
                 logger.warning("Failed to delete messages")
                 logger.error(ex)
-    
-
-    async def handleBoobies(self, interaction: Interaction):
-        # Bob :)
-        get = requests.get("https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp")
-        interaction.command_failed = True
-        if get.ok:
-            bytes = get.content
-            try:
-                await interaction.response.send_message("bob :)", file=discord.File(io.BytesIO(bytes), filename="booba.webp"))
-                #await interaction.channel.send(content="bob :)", file=discord.File(io.BytesIO(bytes), filename="booba.webp"))
-                interaction.command_failed = False
-            except Exception as ex:
-                self.logger.warning(f"Failed to send https://cdn.7tv.app/emote/60aecad55174a619dbb774f2/4x.webp to discord.")
-                self.logger.error(ex)
-
-        if interaction.command_failed:
-            await interaction.response.send_message("bob :(")
     
 
     async def handleDownload(self, interaction: Interaction, count: int):
@@ -173,19 +151,24 @@ class CommandHandler(Client):
     async def on_ready(self):
         self.logger.info("Ready, syncing commands and setting translator...")
         await self.commandTree.set_translator(translations.Translator2())
-
-        commands = await self.commandTree.sync(guild=discord.Object(id=self.guild))
-        if commands:
-            self.logger.info("Commands synced and ready")
-            s = []
-            for command in commands:
-                options = ""
-                for option in command.options:
-                    options += option.name
-                s.append(f"{command.name}: {options}")
-            self.logger.info("Available commands -> [" + ", ".join(s) + "]")
-        else:
-            self.logger.info("CommandTree.sync returned None")
+        try:
+            commands = await self.commandTree.sync(guild=self.guild)
+            if commands:
+                self.logger.info("Commands synced and ready")
+                s = []
+                for command in commands:
+                    options = ""
+                    for option in command.options:
+                        options += option.name
+                    s.append(f"{command.name}: {options}")
+                self.logger.info("Available commands -> [" + ", ".join(s) + "]")
+            else:
+                self.logger.info("CommandTree.sync returned None")
+        except Exception as ex:
+            self.logger.critical("Failed to sync commands.")
+            self.logger.error(ex)
+            if self.config.exit_on_error:
+                exit(-1)
 
 
     def _userAllowed(self, user: discord.User) -> bool:
