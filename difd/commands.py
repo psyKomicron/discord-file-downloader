@@ -8,9 +8,11 @@ from logging import Logger
 from typing import *
 from discord import Client, Intents, Interaction, HTTPException, Forbidden
 from discord.app_commands import CommandTree
-from config import Config, RESOURCE_RE, VALID_FILES_RE
+from config import RESOURCE_RE, VALID_FILES_RE, DEBUG
+from autoconfig import Config
 from batcher import Batcher
-from console import shortPrint 
+if DEBUG:
+    from console import shortPrint 
 
 
 class CommandHandler(Client):

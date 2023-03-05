@@ -2,7 +2,6 @@ import asyncio
 import logging
 import hashlib
 import os
-import config
 import aiofiles
 import math
 from config import HASH_FILENAMES, FILE_EXT_RE

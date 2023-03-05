@@ -2,7 +2,7 @@ import logging
 import discord
 import config
 import console
-from config import Config
+from autoconfig import Config
 from commands import CommandHandler
 
 
