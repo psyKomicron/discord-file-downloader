@@ -38,7 +38,10 @@
         "clean_command_name": "clean",
         "clean_command_failed_forbidden": "Application doesn't have the rights to delete messages -__-",
         "deleted_x_messages": "Deleted {0} messages",
-        "bot_working": "work in progress..."
+        "bot_working": "work in progress...",
+        "invalid_discord_username": "Invalid Discord username.",
+        "configure_allowed_users": "Configure allowed users ? [y/n] ",
+        "input_allowed_users": "Input allowed users separated with a space (ex: bob#1234 alice#4532 marie#21973): "
     },
 
     "fr": {
@@ -71,7 +74,6 @@
         "not_saving_config": "Configuration non sauvegardee",
         "check_token": "Voulez vous verifier le token de connection ? ",
         "is_token_ok": "Token ok ? ",
-        
         "download_command_description": "Telecharge les images et videos du salon",
         "download_command_name": "download",
         "download_command_count_name": "nombres de fichiers",
@@ -80,6 +82,9 @@
         "clean_command_name": "clean",
         "clean_command_failed_forbidden": "L'application n'as pas les droits pour supprimer des messages -__-",
         "deleted_x_messages": "{0} messages supprimés",
-        "bot_working": "ça travaille..."
+        "bot_working": "ça travaille...",
+        "invalid_discord_username": "Invalid Discord username.",
+        "configure_allowed_users": "Configurer les utilisateurs autorisés ? [o/n] ",
+        "input_allowed_users": "Rentrez les noms d'utilisateurs séparés par un espace (ex: bob#1234 alice#4532 marie#21973): "
     }
 }
