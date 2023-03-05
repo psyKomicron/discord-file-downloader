@@ -1,4 +1,15 @@
 # **Change log**
+# 0.0.4
+## Changes
+- Added option to download the latest release from GitHub when using `install.py`.
+
+## Fixes
+
+## Bugs
+- If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
+- Config will fail often.
+
+
 # 0.0.3
 ## Changes
 - Refactored `config.py` to move `Config` class to `autoconfig.py` (fixes recursive dependency between `translations.py` and `config.py`). Thus refactored files dependent upon `config.py`
