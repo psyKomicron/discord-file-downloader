@@ -4,8 +4,12 @@ import json
 import logging
 import genericpath
 import translations
+import asyncio
+import io
+from typing import Tuple, Any
 from translations import getString
-from config import CONFIG_PATH, SECRET_PATH, REPO_PATH, SHOW_TOKEN
+from config import CONFIG_PATH, SECRET_PATH, REPO_PATH, SHOW_TOKEN, API_URL
+from aiohttp import ClientSession, ClientTimeout, ClientResponse
 
 class Config:
     logger: logging.Logger = logging.getLogger("difd.config")
@@ -235,3 +239,122 @@ class Config:
                 return value == True
 
         return default
+    
+
+class Asset:
+    fileName: str
+    contentType: str
+    downloadUrl: str
+    
+    def __init__(self, _fileName, _contentType, _downloadUrl) -> None:
+        self.fileName = _fileName
+        self.contentType = _contentType
+        self.downloadUrl = _downloadUrl
+
+
+class AppVersion:
+    major: int = -1
+    minor: int = -1
+    revision: int = -1
+
+    def __init__(self, version: list[int] = None, major = None, minor = None, revision = None) -> None:
+        if version:
+            if len(version) == 3:
+                self.major, self.minor, self.revision = version
+            else:
+                self.major = version[0]
+                self.minor = version[1] if len(version) > 1 else -1
+                self.revision = version[2] if len(version) > 2 else -1
+        else:
+            self.major = major
+            self.minor = minor
+            self.revision = revision
+
+    def __eq__(self, other) -> bool:
+        return (self.major == other.major) and (self.minor == other.minor) and (self.revision == other.revision)
+
+    def __ge__(self, other) -> int:
+        if self.major > other.major:
+            return 1
+        if self.minor > other.minor:
+            return 1
+        if self.revision > other.revision:
+            return 1
+        return 0 if self == other else -1
+
+
+class UpdateContext:
+    tag: str = None
+    version: AppVersion
+    name: str = None
+    assets: list[Asset] = []
+    notes: str = ""
+
+    def __init__(self, rawJson: Any) -> None:
+        self.tag = rawJson["tag_name"]
+        self._tryParseTag()
+        self.name = rawJson["name"]
+        assets = rawJson["assets"]
+        if len(assets) > 0:
+            # Assets available
+            for asset in assets:
+                fileName = asset["name"]
+                contentType = asset["content_type"]
+                downloadUrl = asset["browser_download_url"]
+                print(f"file-name: {fileName}, content-type: {contentType}, download-url: {downloadUrl}")
+                self.assets.append(Asset(fileName, contentType, downloadUrl))
+        self.notes = rawJson["body"]
+
+    def _tryParseTag(self):
+        if not self.tag.startswith('v'):
+            return
+        tag = self.tag[1:]
+        ints = tag.split('.')
+        for i in ints:
+            try:
+                self.version.append(int(i))
+            except:
+                pass
+        self.version = AppVersion(version=ints)
+
+    def _printAssets(self) -> str:
+        assetsNames = []
+        for asset in self.assets:
+            assetsNames.append(f" - {asset.fileName}")
+        return "\n".join(assetsNames)
+
+    def __str__(self) -> str:
+        return f"""
+    Release {self.name} ({self.tag}):
+Assets:
+{self._printAssets()}
+Notes (Markdown):
+{self.notes}
+"""
+    
+
+async def checkNewRelease() -> UpdateContext:
+    logger = logging.getLogger("checkNewRelease")
+    async with ClientSession() as session:
+        async with session.get(API_URL) as resp:
+            if resp.status != 200:
+                match resp.status:
+                    case 404:
+                        logger.info(f"No release available for this app. {API_URL}")
+                    case 403:
+                        logger.warning(f"GitHub response was 403 for {API_URL}")
+                    case _:
+                        logger.debug(f"Response status not recognized: {resp.status}")
+                return None
+            auto = io.BytesIO(await resp.content.read())
+            jason = json.load(auto)
+            update = UpdateContext(jason)
+            if len(update.assets) > 0:
+                print(update)
+                return update
+            return None
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    asyncio.run(checkNewRelease())

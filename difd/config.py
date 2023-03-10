@@ -13,6 +13,8 @@ DEBUG=False
 REPO_PATH="https://github.com/psyKomicron/discord-file-downloader"
 """Github repo."""
 
+API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/releases/latest"
+
 SHOW_TOKEN=False
 """Show discord connection token on startup."""
 
