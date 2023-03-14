@@ -21,6 +21,7 @@
 - [ ] More robust config and token handling. *still not robust enough*
 - [ ] Handle exceptions and forbidden channels.
 - [X] Config needs to configure `allowed_users`.
+- [ ] Try to run python script as an executable, so that users don't have to use a terminal to start it.
 
 
 # 0.0.3
