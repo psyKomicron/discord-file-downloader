@@ -1,3 +1,6 @@
+"""
+    Standalone installer and updater.
+"""
 import os
 import sys
 import shutil
@@ -7,13 +10,30 @@ import importlib.util
 import platform
 import os
 import io
+import json
+from os import path
+from typing import Any
+from io import BytesIO
 
-REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
-SIMPLER_DOWNLOADER = True
-DEBUG = False
-PYTHON_PREFIX = "python3.11"
+def getEnvVar(name: str | list[str], default: str = "") -> str:
+    if isinstance(name, str):
+        if name in os.environ:
+            return os.environ[name]
+    elif isinstance(name, list):
+        for n in name:
+            if n in os.environ:
+                return os.environ[name]
+    return ""
+
+def getEnvBool(name: str, default: bool = False) -> str:
+    return name in os.environ and getEnvVar(name) != "False"
+
+SIMPLER_DOWNLOADER  = getEnvBool("SIMPLER_DOWNLOADER", True)
+DEBUG               = getEnvBool("DEBUG", False)
+PYTHON_PREFIX       = getEnvVar(["PY", "PYTHON_PREFIX"], "python3.11")
+USE_GIT             = getEnvBool("USE_GIT", False)
 EXIT_ON_FAILED_DEPENDENCY_INSTALL = False
-USE_GIT = False
+REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
 API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/releases/latest"
 
 def mkdir(path: str) -> bool:
@@ -30,9 +50,8 @@ def checkInstall(command: str) -> None:
         print(f"{command} is not installed, install it and rerun the installation script.")
         if os.name != "posix":
             exit()
-        if input(f"Do you want to install {command} ? [y/n] ") == "n":
+        if tryInput("Do you want to install {command} ?"):
             exit()
-
         if os.system(f"sudo apt install {command}") != 0:
             print(f"Failed to install {command}.")
             exit()    
@@ -63,54 +82,14 @@ def installDependencies(configPyPath: str) -> None:
     else:
         print("Successfully installed:\n - " + "\n - ".join(installedDeps))
 
+def tryInput(message: str) -> bool:
+    try:
+        res = input(f"{message} [y/n]: ")
+        return res in ["y", "yes"]
+    except:
+        exit()
 
-print("DiFD installer by psyKomicron")
-downloadPath = ""
-if input("Download in current directory ? [y/n] ") == "n":
-    downloadPath = input("\tDesired path ? ")
-else:
-    downloadPath = "./"
-
-if not os.path.exists(downloadPath):
-    print(f"ERROR: {downloadPath} doesn't exists.")
-    if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
-        if not mkdir(downloadPath):
-            exit(-2)
-    else:
-        exit(-1)
-elif DEBUG and downloadPath != "./":
-    if input("Do you want to clean output directory ? [y/n] ") == "y":
-        os.rmdir(downloadPath)
-        if not mkdir(downloadPath): 
-            exit(-2)
-
-if USE_GIT:
-    checkInstall("git")
-    print("Cloning repository...")
-    if not DEBUG and os.system(f"git clone {REPO_PATH}.git {downloadPath}") != 0:
-        print("Failed to clone repository, please check you internet connection and retry installation.")
-        exit(-1)
-    print(f"Cloned repository into {downloadPath}")
-    if SIMPLER_DOWNLOADER:
-        print("Switching to branch simpler-downloader...")
-        os.chdir(downloadPath)
-        # current path './test/'
-        if not DEBUG and os.system("git checkout simpler-downloader") != 0:
-            print("Failed checkout, impossible to use branch 'simpler-downloader'")
-            exit(-1)
-        print("Switched to branch simpler-downloader")
-        currentPath = os.path.join("./", "difd")
-        os.chdir(currentPath)
-        print("Checking config.py for dependencies...")
-        configPyPath = "config.py"
-        if not os.path.exists(configPyPath):
-            print(f"{configPyPath} not found, impossible to download dependencies.")
-            exit(-1)
-        # Dynamic import for config.py
-        installDependencies(configPyPath)        
-else:
-    os.chdir(downloadPath)
-    print(f"Current dir: {os.path.abspath('./')}")
+def installLatest(downloadPath: str):
     checkInstall("curl")
     # Perform GET request.
     http = urllib3.PoolManager()
@@ -143,4 +122,106 @@ else:
         os.system(f"{PYTHON_PREFIX} app.py")
     else:
         print("Bye bye ! :)")
+
+def update() -> bool:
+    if path.exists("./difd"):
+        # App already exists. Choose whether to download it again/update or not.
+        if DEBUG or tryInput("Application already installed, do you want to update it ?"):
+            if path.exists("./difd/config.py") and False:
+                # TODO:
+                pass
+            elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
+                # Get config files to re-write them after the install.
+                config = None
+                secret = ["", ""]
+                if path.exists("./difd/config.json"):
+                    with open("./difd/config.json") as fp:
+                        config = json.load(BytesIO(fp.read()))
+                if path.exists("./difd/secrets.json"):
+                    with open("./difd/secrets.json") as fp:
+                        secretsJson = json.load(BytesIO(fp.read()))
+                        if not isinstance(secretsJson, list) and "discord_client_secret" in secretsJson:
+                            secret[0] = secretsJson["discord_client_secret"]
+                            secret[1] = secretsJson["name"]
+                print(f"{secret[1]} - {secret[0]}")
+                print(f"Config: {config if config != None else 'None'}")
+                if DEBUG:
+                    difdPath = path.abspath("./")
+                    parentPath = path.abspath("../")
+                    files = os.listdir(path.join(parentPath, difdPath))
+                    print(f"Removing files in {path.abspath('./')}\n - " + "\n - ".join(files))
+                    print("rm " + " ".join(files))
+                    os.chdir(parentPath)
+                    print(path.abspath("./"))
+                    return True
+                else:
+                    # Clean dir and re-install.
+                    parentPath = path.abspath("../")
+                    files = os.listdir(parentPath)
+                    for file in files:
+                        os.remove(file)
+                    os.chdir(parentPath)
+                    installLatest(parentPath)
+    return False
+
     
+def main():
+    if update():
+        exit()
+
+    downloadPath = ""
+    if input("Download in current directory ? [y/n] ") == "n":
+        downloadPath = input("\tDesired path ? ")
+    else:
+        downloadPath = "./"
+
+    if not os.path.exists(downloadPath):
+        print(f"ERROR: {downloadPath} doesn't exists.")
+        if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
+            if not mkdir(downloadPath):
+                exit(-2)
+        else:
+            exit(-1)
+    elif DEBUG and downloadPath != "./":
+        if input("Do you want to clean output directory ? [y/n] ") == "y":
+            os.rmdir(downloadPath)
+            if not mkdir(downloadPath): 
+                exit(-2)
+    
+    if USE_GIT:
+        checkInstall("git")
+        print("Cloning repository...")
+        if not DEBUG and os.system(f"git clone {REPO_PATH}.git {downloadPath}") != 0:
+            print("Failed to clone repository, please check you internet connection and retry installation.")
+            exit(-1)
+        print(f"Cloned repository into {downloadPath}")
+        if SIMPLER_DOWNLOADER:
+            print("Switching to branch simpler-downloader...")
+            os.chdir(downloadPath)
+            # current path './test/'
+            if not DEBUG and os.system("git checkout simpler-downloader") != 0:
+                print("Failed checkout, impossible to use branch 'simpler-downloader'")
+                exit(-1)
+            print("Switched to branch simpler-downloader")
+            currentPath = os.path.join("./", "difd")
+            os.chdir(currentPath)
+            print("Checking config.py for dependencies...")
+            configPyPath = "config.py"
+            if not os.path.exists(configPyPath):
+                print(f"{configPyPath} not found, impossible to download dependencies.")
+                exit(-1)
+            # Dynamic import for config.py
+            installDependencies(configPyPath)        
+    else:
+        os.chdir(downloadPath)
+        print(f"Current dir: {os.path.abspath('./')}")
+        installLatest(downloadPath)
+    
+    
+if __name__ == "__main__":
+    if DEBUG:
+        print("DiFD installer by psyKomicron [DEBUG MODE]")
+        print(path.abspath("./"))
+    else:
+        print("DiFD installer by psyKomicron")
+    main()
