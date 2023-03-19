@@ -19,7 +19,6 @@ class Batcher:
         self.maxBatchCount = maxBatchCount
         self.downloadFolderPath: str = None
 
-
     async def batch(self, urls: list[str]) -> int:
         urls = [*set(urls)] # Remove duplicated strings from the list.            
         if len(urls) > (self.batchSize * self.maxBatchCount):
