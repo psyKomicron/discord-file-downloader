@@ -1,4 +1,28 @@
 # **Change log**
+# 0.0.6
+## Changes
+- Creating directory for guild/server name and channel name to find downloaded files more easily.
+- You can now specify the log level you want for the application using `L=[DEBUG|INFO|...]`
+
+## Fixes
+- Not responding even to authorized users.
+- Config env functions now actually return the default value.
+- Autoconfig saves chosen language and allowed users.
+- Added missing string for en-US.
+- Fixed missing '\n' when recaping the configuration.
+- The application will create the download directory if it needs to.
+
+## Bugs
+*None*
+
+## Todo
+- [ ] Easier and prettier config.
+- [ ] More robust config and token handling. *still not robust enough*
+- [ ] Handle exceptions and forbidden channels.
+- [ ] Try to run python script as an executable, so that users don't have to use a terminal to start it.
+- [X] Fix missing '\n' when recaping the configuration.
+
+
 # 0.0.5
 ## Changes
 - Updated installer.
@@ -10,12 +34,9 @@
 - If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
 
 ## Todo
-- [X] Handle messages.
-- [X] Download images.
 - [ ] Easier and prettier config.
 - [ ] More robust config and token handling. *still not robust enough*
 - [ ] Handle exceptions and forbidden channels.
-- [X] Config needs to configure `allowed_users`.
 - [ ] Try to run python script as an executable, so that users don't have to use a terminal to start it.
 
 
