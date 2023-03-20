@@ -1,4 +1,24 @@
 # **Change log**
+# 0.0.5
+## Changes
+- Updated installer.
+
+## Fixes
+- Fixed bug on startup from `AppVersion` comparison.
+
+## Bugs
+- If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
+
+## Todo
+- [X] Handle messages.
+- [X] Download images.
+- [ ] Easier and prettier config.
+- [ ] More robust config and token handling. *still not robust enough*
+- [ ] Handle exceptions and forbidden channels.
+- [X] Config needs to configure `allowed_users`.
+- [ ] Try to run python script as an executable, so that users don't have to use a terminal to start it.
+
+
 # 0.0.4
 ## Changes
 - Added option to download the latest release from GitHub when using `install.py`.
