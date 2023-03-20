@@ -127,7 +127,7 @@ def installLatest(downloadPath: str):
     os.chdir("./difd/")
     installDependencies("config.py")
     # Clean up
-    os.remove(fileName)
+    os.remove(f"../{fileName}")
     if input("Do you want to start the app ? [y/n] ") == "y":
         print("Bye bye ! :)\n")
         os.system(f"{PYTHON_PREFIX} app.py")
