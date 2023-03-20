@@ -16,6 +16,7 @@ import os
 import io
 import json
 from os import path, mkdir
+from shutil import rmtree
 
 def getEnvVar(name: str | list[str], default: str = "") -> str:
     if isinstance(name, str):
@@ -136,7 +137,7 @@ def update() -> bool:
         if DEBUG or tryInput("Application already installed, do you want to update it ?"):
             currentPath = path.abspath("./")
             if path.exists("./difd.old/"):
-                os.rmdir("./difd.old")
+                rmtree("./difd.old", )
             # Rename old install.
             os.rename("./difd", "difd.old")
             installLatest(currentPath)
