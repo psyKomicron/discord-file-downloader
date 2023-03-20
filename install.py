@@ -163,7 +163,6 @@ def main():
         downloadPath = input("\tDesired path ? ")
     else:
         downloadPath = "./"
-
     if not os.path.exists(downloadPath):
         print(f"ERROR: {downloadPath} doesn't exists.")
         if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
@@ -176,12 +175,12 @@ def main():
             os.rmdir(downloadPath)
             if not mkdir(downloadPath): 
                 exit(-2)
-    
     os.chdir(downloadPath)
     print(f"Current dir: {os.path.abspath('./')}")
     installLatest(downloadPath)
     if input("Do you want to start the app ? [y/n] ") == "y":
         print("Bye bye ! :)\n")
+        os.chdir("./difd/")
         os.system(f"{PYTHON_PREFIX} app.py")
     else:
         print("Bye bye ! :)")
