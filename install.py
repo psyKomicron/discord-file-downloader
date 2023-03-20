@@ -150,11 +150,11 @@ def update() -> bool:
             secret = ["", ""]
             if path.exists("./difd.old/config.json"):
                 with open("./difd.old/config.json") as fp:
-                    config = json.load(BytesIO(fp.read()))
+                    config = json.load(fp.read())
                     print(f"Config\n: {config}")
             if path.exists("./difd.old/secrets.json"):
                 with open("./difd.old/secrets.json") as fp:
-                    secretsJson = json.load(BytesIO(fp.read()))
+                    secretsJson = json.load(fp.read())
                     if not isinstance(secretsJson, list) and "discord_client_secret" in secretsJson:
                         secret[0] = secretsJson["discord_client_secret"]
                         secret[1] = secretsJson["name"]
