@@ -11,7 +11,7 @@ import platform
 import os
 import io
 import json
-from os import path
+from os import path, mkdir
 from typing import Any
 from io import BytesIO
 
@@ -23,7 +23,7 @@ def getEnvVar(name: str | list[str], default: str = "") -> str:
         for n in name:
             if n in os.environ:
                 return os.environ[name]
-    return ""
+    return default
 
 def getEnvBool(name: str, default: bool = False) -> str:
     return name in os.environ and getEnvVar(name) != "False"
@@ -35,14 +35,6 @@ USE_GIT             = getEnvBool("USE_GIT", False)
 EXIT_ON_FAILED_DEPENDENCY_INSTALL = False
 REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
 API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/releases/latest"
-
-def mkdir(path: str) -> bool:
-    if os.name == "posix":
-        if platform.system() in ["Darwin", "Linux"]:
-            # MacOS
-            return os.system(f"mkdir {path}") == 0
-    else:
-        return False
     
 def checkInstall(command: str) -> None:
     shpath = shutil.which(command)
@@ -71,12 +63,13 @@ def installDependencies(configPyPath: str) -> None:
         if os.system(f"{PYTHON_PREFIX} -m pip install {dependency}") != 0:
             print(f"Failed to install {dependency}, you will need to install it before running DiFD.")
             if EXIT_ON_FAILED_DEPENDENCY_INSTALL: exit(-1)
-        installedDeps.append(dependency)
+        else:
+            installedDeps.append(dependency)
     if len(installedDeps) != len(dependencies):
         print("Missing dependencies:")
         for dep in dependencies:
             if dep not in installedDeps:
-                print(f"\t- {dep}")
+                print(f"    - {dep}")
     elif len(installedDeps) == 0:
         print(f"Nothing installed. Check you internet connection or try the installation steps manually.")
     else:
@@ -91,6 +84,8 @@ def tryInput(message: str) -> bool:
 
 def installLatest(downloadPath: str):
     checkInstall("curl")
+    if not path.exists(downloadPath):
+        mkdir(downloadPath)
     # Perform GET request.
     http = urllib3.PoolManager()
     r = http.request("GET", API_URL)
@@ -113,10 +108,14 @@ def installLatest(downloadPath: str):
     if not os.path.exists(fileName):
         print(f"{fileName} doesn't exists.")
         exit(-1)
-    print(f"Unpacking {fileName}...")
-    shutil.unpack_archive(fileName)
+    # Rename old install.
     if path.exists("./difd"):
         os.rename("./difd", "difd.old")
+    #mkdir("./difd")
+    print(f"Unpacking {fileName}...")
+    shutil.unpack_archive(fileName, "./difd")
+    os.chdir("./difd/")
+    input(f"{path.abspath('./')} | Continue ? ")
     installDependencies("config.py")
     if input("Do you want to start the app ? [y/n] ") == "y":
         print("Bye bye ! :)")
@@ -143,14 +142,12 @@ def update() -> bool:
                             secret[0] = secretsJson["discord_client_secret"]
                             secret[1] = secretsJson["name"]
                             print(f"{secret[1]} - {secret[0]}")
-                installPath = path.abspath("./difd")
-                # Rename old install.
-                currentPath = path.abspath("./")
-                
-                return True
-            elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
+            #elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
                 # Get config files to re-write them after the install.
-                pass
+                #pass
+            currentPath = path.abspath("./")
+            installLatest(currentPath)
+            return True
     return False
 
     
