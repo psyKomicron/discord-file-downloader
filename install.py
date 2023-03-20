@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
 """
     Standalone installer and updater.
 """
+__title__ = "DFiD Installer"
+__author__ = "psykomicron"
+__version__ = (1, 0, 1)
+
 import os
 import sys
 import shutil
@@ -126,8 +131,9 @@ def installLatest(downloadPath: str):
     shutil.unpack_archive(fileName, "./difd")
     os.chdir("./difd/")
     installDependencies("config.py")
+    os.chdir("../")
     # Clean up
-    os.remove(f"../{fileName}")
+    os.remove(f"{fileName}")
 
 def update() -> bool:
     if path.exists("./difd"):
