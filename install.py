@@ -115,7 +115,8 @@ def installLatest(downloadPath: str):
         exit(-1)
     print(f"Unpacking {fileName}...")
     shutil.unpack_archive(fileName)
-    os.chdir(f"./{fileName[:-4]}/difd/")
+    if path.exists("./difd"):
+        os.rename("./difd", "difd.old")
     installDependencies("config.py")
     if input("Do you want to start the app ? [y/n] ") == "y":
         print("Bye bye ! :)")
@@ -145,11 +146,7 @@ def update() -> bool:
                 installPath = path.abspath("./difd")
                 # Rename old install.
                 currentPath = path.abspath("./")
-                #os.rename(installPath, path.join(currentPath, "difd.old"))
-                print(f"{installPath}, path.join({currentPath}, \"difd.old\")")
-                files = os.listdir(installPath)
-                print(f"Removing files in {installPath}\n  - " + "\n  - ".join(files))
-                #installLatest(installPath)
+                
                 return True
             elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
                 # Get config files to re-write them after the install.
