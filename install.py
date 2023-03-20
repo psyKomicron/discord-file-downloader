@@ -145,39 +145,33 @@ def update() -> bool:
                 os.rename("./difd.old/config.json", "./difd/config.json")
             if path.exists("./difd.old/secrets.json"):
                 os.rename("./difd.old/secrets.json", "./difd/secrets.json")
-            if input("Do you want to start the app ? [y/n] ") == "y":
-                print("Bye bye ! :)\n")
-                os.system(f"{PYTHON_PREFIX} app.py")
-            else:
-                print("Bye bye ! :)")
             return True
     return False
 
     
 def main():
-    if update():
-        exit()
-
-    downloadPath = ""
-    if input("Download in current directory ? [y/n] ") == "n":
-        downloadPath = input("\tDesired path ? ")
-    else:
-        downloadPath = "./"
-    if not os.path.exists(downloadPath):
-        print(f"ERROR: {downloadPath} doesn't exists.")
-        if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
-            if not mkdir(downloadPath):
-                exit(-2)
+    if not update():
+        downloadPath = ""
+        if input("Download in current directory ? [y/n] ") == "n":
+            downloadPath = input("\tDesired path ? ")
         else:
-            exit(-1)
-    elif DEBUG and downloadPath != "./":
-        if input("Do you want to clean output directory ? [y/n] ") == "y":
-            os.rmdir(downloadPath)
-            if not mkdir(downloadPath): 
-                exit(-2)
-    os.chdir(downloadPath)
-    print(f"Current dir: {os.path.abspath('./')}")
-    installLatest(downloadPath)
+            downloadPath = "./"
+        if not os.path.exists(downloadPath):
+            print(f"ERROR: {downloadPath} doesn't exists.")
+            if input(f"Do you want to create {downloadPath} ? [y/n] ") == "y":
+                if not mkdir(downloadPath):
+                    exit(-2)
+            else:
+                exit(-1)
+        elif DEBUG and downloadPath != "./":
+            if input("Do you want to clean output directory ? [y/n] ") == "y":
+                os.rmdir(downloadPath)
+                if not mkdir(downloadPath): 
+                    exit(-2)
+        os.chdir(downloadPath)
+        print(f"Current dir: {os.path.abspath('./')}")
+        installLatest(downloadPath)
+
     if input("Do you want to start the app ? [y/n] ") == "y":
         print("Bye bye ! :)\n")
         os.chdir("./difd/")
