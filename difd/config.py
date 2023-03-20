@@ -5,21 +5,24 @@ __version__ = (0, 0, 6)
 import logging
 import re
 import os
+from typing import Final
 
 def getEnvVar(name: str, default: str = "") -> str:
     if name in os.environ:
         return os.environ[name]
-    return ""
+    return default
 
 def getEnvBool(name: str, default: bool = False) -> str:
-    return getEnvVar(name) == "True"
+    if name in os.environ:
+        return os.environ[name] == "True"
+    return default
 
 
-DEBUG=getEnvBool("DEBUG")
+DEBUG: Final[bool] = getEnvBool("DEBUG")
 SHOW_TOKEN=getEnvBool("SHOW_TOKEN")
 """Show discord connection token on startup."""
 # logging.DEBUG if DEBUG else logging.INFO
-LOG_LEVEL=logging._levelToName[getEnvVar("L")] if getEnvVar("L") in logging._levelToName else logging.INFO
+LOG_LEVEL: Final[int] =logging._nameToLevel[getEnvVar("L")] if getEnvVar("L") in logging._nameToLevel else logging.INFO
 """Logging level."""
 CONFIG_PATH="./config.json"
 """Configuration file path."""
