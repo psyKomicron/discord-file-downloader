@@ -12,14 +12,14 @@ class Batcher:
     logger = logging.getLogger(__name__)
     maxBatchCount: int
     batchSize: int
+    downloadFolderRoot: str
     _successRate: int = 0
 
     def __init__(self, batchSize: int, maxBatchCount: int) -> None:
         self.batchSize = batchSize
         self.maxBatchCount = maxBatchCount
-        self.downloadFolderPath: str = None
 
-    async def batch(self, urls: list[str]) -> int:
+    async def batch(self, urls: list[str], downloadFolder: str) -> int:
         urls = [*set(urls)] # Remove duplicated strings from the list.            
         if len(urls) > (self.batchSize * self.maxBatchCount):
             self.logger.debug(f"Trimming urls ({len(urls)} > {(self.batchSize * self.maxBatchCount)})")
@@ -27,33 +27,34 @@ class Batcher:
         else:
             self.logger.info(f"Starting download for {len(urls)} urls")
         downloadCount = 0
+        downloadPath = os.path.join(self.downloadFolderRoot, downloadFolder)
         for i in range(0, len(urls), self.batchSize):
             async with ClientSession(timeout=ClientTimeout(total=None)) as session:
                 tasks = []
                 upperBound = (i + self.batchSize) if (i + self.batchSize) < len(urls) else len(urls)
                 for j in range(i, upperBound):
                     self.logger.debug(F"Downloading {shortPrint(urls[j], 50)}")
-                    tasks.append(asyncio.create_task(self.download(urls[j], session)))
+                    tasks.append(asyncio.create_task(self.download(urls[j], session, downloadPath)))
                 self.logger.debug(f"Waiting for tasks {i}-{i + upperBound} to finish...")
                 try:
                     futures = await asyncio.gather(*tasks)
                     for result in futures:
                         if result:
                             downloadCount += 1
-                            self._successRate = downloadCount / len(urls)
+                            self._successRate = float(downloadCount) / float(len(urls))
                 except* TimeoutError as ex:
                     self.logger.error("Timeout-ed while waiting for tasks to finish: ")
                     self.logger.error(ex)
                 except* Exception as ex:
                     self.logger.error(f"While waiting for tasks to finish: {ex}")
-                self.logger.info(f"Batch {math.ceil((i + 1) / self.batchSize)}/{math.ceil(len(urls) / self.batchSize)} done")
+                self.logger.debug(f"Batch {math.ceil((i + 1) / self.batchSize)}/{math.ceil(len(urls) / self.batchSize)} done")
             if i > (self.batchSize * self.maxBatchCount):
                 self.logger.warning(f"Reached cookies limit! Too many files downloaded ({i} > batchSize * maxBatchCount)")
             #successRate = "{:.2f}".format((downloadCount / len(urls)) * 100)
         self.logger.info(F"Finished downloading, success rate: {self._successRate * 100.0}% ({downloadCount}/{len(urls)})")
         return downloadCount
 
-    async def download(self, url: str, session: ClientSession) -> bool:
+    async def download(self, url: str, session: ClientSession, downloadFolderPath: str) -> bool:
         try:
             async with session.get(url) as resp:
                 if resp.status == 200:
@@ -63,11 +64,11 @@ class Batcher:
                         fileName = ""
                         if HASH_FILENAMES:
                             fileHash = hashlib.sha256(url.encode("utf-8")).hexdigest() + ext            
-                            fileName = os.path.join(self.downloadFolderPath, fileHash)
+                            fileName = os.path.join(downloadFolderPath, fileHash)
                         else:
-                            fileName = os.path.join(self.downloadFolderPath, name + ext)
-                        if not os.path.exists(self.downloadFolderPath): 
-                            self.logger.critical(f"Download folder '{self.downloadFolderPath}' does not exists")
+                            fileName = os.path.join(downloadFolderPath, name + ext)
+                        if not os.path.exists(downloadFolderPath): 
+                            self.logger.critical(f"Download folder '{downloadFolderPath}' does not exists")
                             return False
                         if os.path.exists(fileName):
                             self.logger.debug(f"{fileName} exists, not overwriting")
@@ -91,10 +92,10 @@ class Batcher:
     def successRate(self) -> float: return self._successRate    
     
     @property
-    def downloadFolderPath(self) -> str: return self._download_folder_path
+    def downloadFolderRoot(self) -> str: return self._download_folder_path
 
-    @downloadFolderPath.setter
-    def downloadFolderPath(self, value: str) -> None:
+    @downloadFolderRoot.setter
+    def downloadFolderRoot(self, value: str) -> None:
         self._download_folder_path = value
 
     def _getExt(self, url: str) -> tuple[str, str] | tuple[None, None]:

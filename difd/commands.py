@@ -1,9 +1,8 @@
 import discord
 import discord.app_commands
 import re
-import requests
-import io
 import translations
+import os
 from logging import Logger
 from typing import *
 from discord import Client, Intents, Interaction, HTTPException, Forbidden
@@ -11,6 +10,7 @@ from discord.app_commands import CommandTree
 from config import RESOURCE_RE, VALID_FILES_RE, DEBUG
 from autoconfig import Config
 from batcher import Batcher
+from os import path
 if DEBUG:
     from console import shortPrint 
 
@@ -28,7 +28,7 @@ class CommandHandler(Client):
         self.guild = discord.Object(id=289090423031463936) if DEBUG else None
         self.config = config
         self.logger = logger
-        self.batcher.downloadFolderPath = config.download_folder_path
+        self.batcher.downloadFolderRoot = config.download_folder_path
 
         self.commandTree = CommandTree(self)        
         @self.commandTree.command(name="download_command_name", description="download_command_description", guild=self.guild)
@@ -125,7 +125,11 @@ class CommandHandler(Client):
                 self.logger.error(ex)
             return
         self.logger.info("Batching files...")
-        downloads = await self.batcher.batch(resources)
+        channelName = interaction.channel.name
+        serverName = interaction.guild.name
+        downloadFolder = path.join(self.config.download_folder_path, serverName, channelName)
+        os.makedirs(downloadFolder)
+        downloads = await self.batcher.batch(resources, downloadFolder)
         try:
             rate = "{:.1f}%".format(self.batcher.successRate * 100)
             await interaction.followup.send(content=f"✅️ ({rate} | {downloads}/{len(resources)})", ephemeral=True)
@@ -172,4 +176,5 @@ class CommandHandler(Client):
 
 
     def _userAllowed(self, user: discord.User) -> bool:
+        self.logger.debug(f"{user.name}#{user.discriminator} allowed ? " + "Yes" if f"{user.name}#{user.discriminator}" in self.config.allowed_users else "No")
         return f"{user.name}#{user.discriminator}" in self.config.allowed_users

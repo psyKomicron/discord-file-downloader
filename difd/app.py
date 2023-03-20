@@ -5,12 +5,12 @@ import console
 import asyncio
 from autoconfig import Config, checkNewRelease, AppVersion
 from commands import CommandHandler
-from config import DEBUG, __version__ as APP_VERSION
+from config import DEBUG, __version__ as APP_VERSION, LOG_LEVEL
 
 
 streamHandler = logging.StreamHandler()
 streamHandler.setFormatter(console.ColorFormatter(fmt="%(levelname)-17s %(name)s  %(message)-7s"))
-logging.basicConfig(level=config.LOG_LEVEL, handlers=[streamHandler])
+logging.basicConfig(level=LOG_LEVEL, handlers=[streamHandler])
 logger = logging.getLogger("difd.main")
 
 async def checkUpdates():
@@ -24,6 +24,7 @@ async def checkUpdates():
 
 # Main
 if __name__ == '__main__':    
+    print(f"Log level: {logging.getLevelName(LOG_LEVEL)}")
     # Check new version
     asyncio.run(checkUpdates())
     
