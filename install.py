@@ -136,7 +136,7 @@ def update() -> bool:
         if DEBUG or tryInput("Application already installed, do you want to update it ?"):
             currentPath = path.abspath("./")
             if path.exists("./difd.old/"):
-                os.remove("./difd.old/")
+                os.rmdir("./difd.old")
             # Rename old install.
             os.rename("./difd", "difd.old")
             installLatest(currentPath)
