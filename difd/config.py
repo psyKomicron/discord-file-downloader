@@ -4,19 +4,28 @@ __version__ = (0, 0, 4)
 
 import logging
 import re
-import confighelper as helper
+import os
 
-DEBUG=helper.getEnvBool("DEBUG")
-SHOW_TOKEN=helper.getEnvBool("SHOW_TOKEN")
+def getEnvVar(name: str, default: str = "") -> str:
+    if name in os.environ:
+        return os.environ[name]
+    return ""
+
+def getEnvBool(name: str, default: bool = False) -> str:
+    return getEnvVar(name) == "True"
+
+
+DEBUG=getEnvBool("DEBUG")
+SHOW_TOKEN=getEnvBool("SHOW_TOKEN")
 """Show discord connection token on startup."""
 # logging.DEBUG if DEBUG else logging.INFO
-LOG_LEVEL=logging._levelToName[helper.getEnvVar("L")] if helper.getEnvVar("L") in logging._levelToName else logging.INFO
+LOG_LEVEL=logging._levelToName[getEnvVar("L")] if getEnvVar("L") in logging._levelToName else logging.INFO
 """Logging level."""
 CONFIG_PATH="./config.json"
 """Configuration file path."""
 SECRET_PATH="./secrets.json"
 """Discord token file path."""
-HASH_FILENAMES=helper.getEnvBool("HASH_FILENAMES", True)
+HASH_FILENAMES=getEnvBool("HASH_FILENAMES", True)
 """Whether or not to hash file names when downloading (can avoid collisions)."""
 
 # CONSTANTS
