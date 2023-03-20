@@ -4,7 +4,7 @@
 - Updated installer.
 
 ## Fixes
-*None*
+- Fixed bug on startup from `AppVersion` comparison.
 
 ## Bugs
 - If the `./downloads/` directory is not created, the download command will fail (`batcher.download` doesn't create the dir).
