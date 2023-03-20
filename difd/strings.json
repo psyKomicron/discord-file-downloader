@@ -41,7 +41,8 @@
         "bot_working": "work in progress...",
         "invalid_discord_username": "Invalid Discord username.",
         "configure_allowed_users": "Configure allowed users ? [y/n] ",
-        "input_allowed_users": "Input allowed users separated with a space (ex: bob#1234 alice#4532 marie#21973): "
+        "input_allowed_users": "Input allowed users separated with a space (ex: bob#1234 alice#4532 marie#21973): ",
+        "allowed_users": "Allowed users"
     },
 
     "fr": {
