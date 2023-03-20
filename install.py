@@ -143,10 +143,13 @@ def update() -> bool:
                             secret[1] = secretsJson["name"]
                             print(f"{secret[1]} - {secret[0]}")
                 installPath = path.abspath("./difd")
-                parentPath = path.abspath("../")
+                # Rename old install.
+                currentPath = path.abspath("./")
+                #os.rename(installPath, path.join(currentPath, "difd.old"))
+                print(f"{installPath}, path.join({currentPath}, \"difd.old\")")
                 files = os.listdir(installPath)
                 print(f"Removing files in {installPath}\n  - " + "\n  - ".join(files))
-                installLatest(installPath)
+                #installLatest(installPath)
                 return True
             elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
                 # Get config files to re-write them after the install.
