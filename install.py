@@ -50,6 +50,20 @@ def checkInstall(command: str) -> None:
         print(f"Successfully installed {command}.")
     
 def installDependencies(configPyPath: str) -> None:
+    # Check if pip is installed.
+    if os.system(f"{PYTHON_PREFIX} -m pip") != 0:
+        # Check if "ensurepip" script is available.
+        if os.system(f"{PYTHON_PREFIX} -m ensurepip") != 0:
+            if os.system(f"curl -LJO \"https://bootstrap.pypa.io/get-pip.py\"") != 0:
+                print(f"pip is not installed and is required to run python. Please install it.")
+                exit(-3)
+            elif os.system(f"{PYTHON_PREFIX} get-pip.py") != 0 or os.system(f"{PYTHON_PREFIX} -m pip") != 0:
+                print(f"Failed to install pip using bootstrap script.")
+                exit(-3)
+            else:
+                print(f"Succesfully installed pip. Module installation can proceed.")
+        else:
+            print(f"Successfully installed pip using ensurepip module.")
     spec = importlib.util.spec_from_file_location("config", configPyPath)
     config = importlib.util.module_from_spec(spec)
     sys.modules["config"] = config
@@ -108,17 +122,14 @@ def installLatest(downloadPath: str):
     if not os.path.exists(fileName):
         print(f"{fileName} doesn't exists.")
         exit(-1)
-    # Rename old install.
-    if path.exists("./difd"):
-        os.rename("./difd", "difd.old")
-    #mkdir("./difd")
     print(f"Unpacking {fileName}...")
     shutil.unpack_archive(fileName, "./difd")
     os.chdir("./difd/")
-    input(f"{path.abspath('./')} | Continue ? ")
     installDependencies("config.py")
+    # Clean up
+    os.remove(fileName)
     if input("Do you want to start the app ? [y/n] ") == "y":
-        print("Bye bye ! :)")
+        print("Bye bye ! :)\n")
         os.system(f"{PYTHON_PREFIX} app.py")
     else:
         print("Bye bye ! :)")
@@ -146,6 +157,10 @@ def update() -> bool:
                 # Get config files to re-write them after the install.
                 #pass
             currentPath = path.abspath("./")
+            if path.exists("./difd.old/"):
+                os.remove("./difd.old/")
+            # Rename old install.
+            os.rename("./difd", "difd.old")
             installLatest(currentPath)
             return True
     return False
