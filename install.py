@@ -4,7 +4,7 @@
 """
 __title__ = "DFiD Installer"
 __author__ = "psykomicron"
-__version__ = (1, 0, 1)
+__version__ = (1, 0, 3)
 
 import os
 import sys
@@ -12,13 +12,10 @@ import shutil
 import json
 import urllib3
 import importlib.util
-import platform
 import os
 import io
 import json
 from os import path, mkdir
-from typing import Any
-from io import BytesIO
 
 def getEnvVar(name: str | list[str], default: str = "") -> str:
     if isinstance(name, str):
@@ -36,9 +33,7 @@ def getEnvBool(name: str, default: bool = False) -> str:
 SIMPLER_DOWNLOADER  = getEnvBool("SIMPLER_DOWNLOADER", True)
 DEBUG               = getEnvBool("DEBUG", False)
 PYTHON_PREFIX       = getEnvVar(["PY", "PYTHON_PREFIX"], "python3.11")
-USE_GIT             = getEnvBool("USE_GIT", False)
 EXIT_ON_FAILED_DEPENDENCY_INSTALL = False
-REPO_PATH = "https://github.com/psyKomicron/discord-file-downloader"
 API_URL = "https://api.github.com/repos/psykomicron/discord-file-downloader/releases/latest"
     
 def checkInstall(command: str) -> None:
@@ -146,20 +141,10 @@ def update() -> bool:
             os.rename("./difd", "difd.old")
             installLatest(currentPath)
             # Copy config files to new installation directory.
-            config = None
-            secret = ["", ""]
             if path.exists("./difd.old/config.json"):
-                with open("./difd.old/config.json") as fp:
-                    config = json.load(fp)
-                    print(f"Config\n: {config}")
+                os.rename("./difd.old/config.json", "./difd/config.json")
             if path.exists("./difd.old/secrets.json"):
-                with open("./difd.old/secrets.json") as fp:
-                    secretsJson = json.load(fp)
-                    if not isinstance(secretsJson, list) and "discord_client_secret" in secretsJson:
-                        secret[0] = secretsJson["discord_client_secret"]
-                        secret[1] = secretsJson["name"]
-                        print(f"{secret[1]} - {secret[0]}")
-
+                os.rename("./difd.old/secrets.json", "./difd/secrets.json")
             if input("Do you want to start the app ? [y/n] ") == "y":
                 print("Bye bye ! :)\n")
                 os.system(f"{PYTHON_PREFIX} app.py")
@@ -192,39 +177,14 @@ def main():
             if not mkdir(downloadPath): 
                 exit(-2)
     
-    if USE_GIT:
-        checkInstall("git")
-        print("Cloning repository...")
-        if not DEBUG and os.system(f"git clone {REPO_PATH}.git {downloadPath}") != 0:
-            print("Failed to clone repository, please check you internet connection and retry installation.")
-            exit(-1)
-        print(f"Cloned repository into {downloadPath}")
-        if SIMPLER_DOWNLOADER:
-            print("Switching to branch simpler-downloader...")
-            os.chdir(downloadPath)
-            # current path './test/'
-            if not DEBUG and os.system("git checkout simpler-downloader") != 0:
-                print("Failed checkout, impossible to use branch 'simpler-downloader'")
-                exit(-1)
-            print("Switched to branch simpler-downloader")
-            currentPath = os.path.join("./", "difd")
-            os.chdir(currentPath)
-            print("Checking config.py for dependencies...")
-            configPyPath = "config.py"
-            if not os.path.exists(configPyPath):
-                print(f"{configPyPath} not found, impossible to download dependencies.")
-                exit(-1)
-            # Dynamic import for config.py
-            installDependencies(configPyPath)        
+    os.chdir(downloadPath)
+    print(f"Current dir: {os.path.abspath('./')}")
+    installLatest(downloadPath)
+    if input("Do you want to start the app ? [y/n] ") == "y":
+        print("Bye bye ! :)\n")
+        os.system(f"{PYTHON_PREFIX} app.py")
     else:
-        os.chdir(downloadPath)
-        print(f"Current dir: {os.path.abspath('./')}")
-        installLatest(downloadPath)
-        if input("Do you want to start the app ? [y/n] ") == "y":
-            print("Bye bye ! :)\n")
-            os.system(f"{PYTHON_PREFIX} app.py")
-        else:
-            print("Bye bye ! :)")
+        print("Bye bye ! :)")
     
     
 if __name__ == "__main__":
@@ -232,5 +192,5 @@ if __name__ == "__main__":
         print("DiFD installer by psyKomicron [DEBUG MODE]")
         print(path.abspath("./"))
     else:
-        print("DiFD installer by psyKomicron")
+        print(f"DiFD installer by psyKomicron (v.{__version__[0]}.{__version__[1]}.{__version__[2]})")
     main()
