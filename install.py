@@ -127,41 +127,30 @@ def update() -> bool:
     if path.exists("./difd"):
         # App already exists. Choose whether to download it again/update or not.
         if DEBUG or tryInput("Application already installed, do you want to update it ?"):
-            if path.exists("./difd/config.py") and False:
+            if path.exists("./difd/config.py"):
                 # TODO:
-                pass
-            elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
-                # Get config files to re-write them after the install.
                 config = None
                 secret = ["", ""]
                 if path.exists("./difd/config.json"):
                     with open("./difd/config.json") as fp:
                         config = json.load(BytesIO(fp.read()))
+                        print(f"Config\n: {config}")
                 if path.exists("./difd/secrets.json"):
                     with open("./difd/secrets.json") as fp:
                         secretsJson = json.load(BytesIO(fp.read()))
                         if not isinstance(secretsJson, list) and "discord_client_secret" in secretsJson:
                             secret[0] = secretsJson["discord_client_secret"]
                             secret[1] = secretsJson["name"]
-                print(f"{secret[1]} - {secret[0]}")
-                print(f"Config: {config if config != None else 'None'}")
-                if DEBUG:
-                    difdPath = path.abspath("./")
-                    parentPath = path.abspath("../")
-                    files = os.listdir(path.join(parentPath, difdPath))
-                    print(f"Removing files in {path.abspath('./')}\n - " + "\n - ".join(files))
-                    print("rm " + " ".join(files))
-                    os.chdir(parentPath)
-                    print(path.abspath("./"))
-                    return True
-                else:
-                    # Clean dir and re-install.
-                    parentPath = path.abspath("../")
-                    files = os.listdir(parentPath)
-                    for file in files:
-                        os.remove(file)
-                    os.chdir(parentPath)
-                    installLatest(parentPath)
+                            print(f"{secret[1]} - {secret[0]}")
+                installPath = path.abspath("./difd")
+                parentPath = path.abspath("../")
+                files = os.listdir(installPath)
+                print(f"Removing files in {installPath}\n  - " + "\n  - ".join(files))
+                installLatest(installPath)
+                return True
+            elif DEBUG or tryInput("Application is not properly installed, do you wish to re-install it ?"):
+                # Get config files to re-write them after the install.
+                pass
     return False
 
     
