@@ -6,7 +6,7 @@ import genericpath
 import translations
 import asyncio
 import io
-from typing import Tuple, Any
+from typing import Tuple, Any, Optional
 from translations import getString
 from config import CONFIG_PATH, SECRET_PATH, REPO_PATH, SHOW_TOKEN, API_URL
 from aiohttp import ClientSession, ClientTimeout, ClientResponse
@@ -27,13 +27,12 @@ class Config:
     def __init__(self) -> None:
         self.logger.setLevel(logging.DEBUG)
         logging.basicConfig(level=logging.DEBUG)
-    
 
     def openConfig(self) -> None:
         if genericpath.exists(CONFIG_PATH):
             rawJson = json.load(open(CONFIG_PATH))
             # Check config file to see if it is empty/defaulted.
-            if len(set(rawJson.keys())) > 0 and len(set(rawJson.values())) > 0:
+            if len(set(rawJson.keys())) > 0:
                 # Configuration file is NOT empty.
                 try:
                     self._loadConfig(rawJson)
@@ -48,14 +47,14 @@ class Config:
         print("-- Configuration --")
         availableLanguages = list(translations.getAvailableLanguagesSets())
         print(f"Available languages: {availableLanguages}")
-        language = input("\tSelect app language: ") 
+        chosenLanguage = input("\tSelect app language: ") 
         chosenLanguage = "en-US"
         for item in availableLanguages:
-            if re.search(item, language):
+            if re.search(item, chosenLanguage):
                 chosenLanguage = item
                 break
         translations.setLanguage(chosenLanguage)
-        language = chosenLanguage
+        self.language = chosenLanguage
         print(getString("read_full_doc").format(REPO_PATH))
         print(getString("starting_configuration"))
         # Ask user for login:
@@ -67,6 +66,8 @@ class Config:
             if not downloadPath:
                 downloadPath = currentPath
                 print("\t> " + getString("using_default_download_folder"))
+                if not os.path.exists(downloadPath):
+                    os.makedirs(downloadPath)
                 break
             else:
                 if genericpath.exists(downloadPath):
@@ -89,6 +90,7 @@ class Config:
                         else:
                             print(getString("invalid_discord_username").format(user))
                 else:
+                    # TODO:
                     pass
         showAdvancedSettings = input(getString("show_advanced_settings"))
         if re.search(self.validationRe, showAdvancedSettings):
@@ -100,16 +102,16 @@ class Config:
             self.max_fetch_size = maxFetch
             # Show unhandled messages.
             showUnhandledMessages = re.search(self.validationRe, input(getString("show_unhandled_messages_name")))
-            self.show_unhandled_messages = showUnhandledMessages
+            self.show_unhandled_messages = showUnhandledMessages != None
             # Exit on error
             exitOnError = re.search(self.validationRe, input(getString("exit_on_error_name")))
-            self.exit_on_error = exitOnError
+            self.exit_on_error = exitOnError != None
             # Show skips
             showSkips = re.search(self.validationRe, input(getString("show_skips")))
-            self.show_skips = showSkips
+            self.show_skips = showSkips != None
             # Exit after command
             exitAfterCommand = re.search(self.validationRe, input(getString("exit_after_command_name")))
-            self.exit_after_command = exitAfterCommand
+            self.exit_after_command = exitAfterCommand != None
         else:
             print("\t> " + getString("skipping_advanced_options"))
             # Set config defaults
@@ -120,11 +122,11 @@ class Config:
             self.exit_after_command = True
         print(getString("printing_recap"))
         print(
-            "\t-" + getString("max_fetch_files_name") + f": {self.max_fetch_size}\n\t-" +
-            getString("show_unhandled_messages_name") + ": " + getString(f"{self.show_unhandled_messages}") + "\n\t-" +
-            getString("exit_on_error_name") + ": " + getString(f"{self.exit_on_error}") + "\n\t-" + 
-            getString("show_skips_name") + ": " + getString(f"{self.show_skips}") + "\n\t-" +
-            getString("exit_after_command_name") + ": " + getString(f"{self.exit_after_command}") +
+            "\t-" + getString("max_fetch_files_name") + f": {self.max_fetch_size}\n\t- " +
+            getString("show_unhandled_messages_name") + ": " + getString(f"{self.show_unhandled_messages}") + "\n\t- " +
+            getString("exit_on_error_name") + ": " + getString(f"{self.exit_on_error}") + "\n\t- " + 
+            getString("show_skips_name") + ": " + getString(f"{self.show_skips}") + "\n\t- " +
+            getString("exit_after_command_name") + ": " + getString(f"{self.exit_after_command}") + "\n\t- " +
             getString("allowed_users") + ": " + " ".join(self.allowed_users)
         )
         ok = re.search(self.validationRe, input(getString("is_this_ok")))
@@ -137,8 +139,7 @@ class Config:
         else:
             print(getString("not_saving_config"))
 
-
-    def getToken(self) -> str:
+    def getToken(self) -> str | None:
         if genericpath.exists(SECRET_PATH):
             secretsFile = json.load(open(SECRET_PATH))
             if "discord_client_secret" in secretsFile:
@@ -154,7 +155,6 @@ class Config:
                 return secret
         else:
             return None
-
 
     def setupToken(self) -> None:
         print(getString("checking_login"))
@@ -190,7 +190,6 @@ class Config:
                 }
                 json.dump(obj, open("./secrets.json", "w"))    
 
-
     def toJson(self):
         return {
             "max_fetch_size": self.max_fetch_size,
@@ -200,15 +199,14 @@ class Config:
             "show_skips": self.show_skips,
             "exit_after_command": self.exit_after_command,
             "language": self.language,
-            "secrets_file": self.secrets_file
+            "secrets_file": self.secrets_file,
+            "allowed_users": self.allowed_users
         }
-
 
     def printOptions(self, printFunc):
         asJson = self.toJson()
         for key in asJson:
             printFunc(f"{key}: {asJson[key]}")
-
 
     def _loadConfig(self, rawJson):
         # Hard set attributes.
@@ -257,8 +255,8 @@ class AppVersion:
     minor: int = -1
     revision: int = -1
 
-    def __init__(self, version: list[int] = None, major = None, minor = None, revision = None) -> None:
-        if version:
+    def __init__(self, version: list[int] = [], major = -1, minor = -1, revision = -1) -> None:
+        if len(version) > 0:
             if len(version) == 3:
                 self.major, self.minor, self.revision = version
             else:
@@ -311,9 +309,9 @@ class AppVersion:
 
 
 class UpdateContext:
-    tag: str = None
+    tag: str = ""
     version: AppVersion
-    name: str = None
+    name: str = ""
     assets: list[Asset] = []
     notes: str = ""
 
@@ -360,7 +358,7 @@ Notes (Markdown):
 """
     
 
-async def checkNewRelease() -> UpdateContext:
+async def checkNewRelease() -> Optional[UpdateContext]:
     logger = logging.getLogger("checkNewRelease")
     async with ClientSession() as session:
         async with session.get(API_URL) as resp:
