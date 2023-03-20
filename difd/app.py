@@ -18,7 +18,7 @@ async def checkUpdates():
     if update:
         currentAppVersion = AppVersion(version=APP_VERSION)
         if update.version > currentAppVersion:
-            logger.info(f"New version available: ")
+            logger.info(f"New version available: {update.name} {update.version}")
     else:
         logger.debug("No packages released.")
 

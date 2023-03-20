@@ -272,15 +272,42 @@ class AppVersion:
 
     def __eq__(self, other) -> bool:
         return (self.major == other.major) and (self.minor == other.minor) and (self.revision == other.revision)
-
-    def __ge__(self, other) -> int:
+    
+    def __lt__(self, other) -> bool:
+        if self.major < other.major:
+            return True
+        elif self.major > other.major:
+            return False
+        if self.minor < other.minor:
+            return True
+        elif self.minor > other.minor:
+            return False
+        if self.revision < other.revision:
+            return True
+        elif self.revision > other.revision:
+            return False
+        return False
+    
+    def __gt__(self, other) -> bool:
+        # Check major.
         if self.major > other.major:
-            return 1
+            return True
+        elif self.major < other.major:
+            return False
+        # Check minor.
         if self.minor > other.minor:
-            return 1
+            return True
+        elif self.minor < other.minor:
+            return False
+        # Check revision.
         if self.revision > other.revision:
-            return 1
-        return 0 if self == other else -1
+            return True
+        elif self.revision < other.revision:
+            return False
+        return False
+    
+    def pack(self) -> list[int]:
+        return [self.major, self.minor, self.revision]
 
 
 class UpdateContext:
@@ -301,7 +328,6 @@ class UpdateContext:
                 fileName = asset["name"]
                 contentType = asset["content_type"]
                 downloadUrl = asset["browser_download_url"]
-                print(f"file-name: {fileName}, content-type: {contentType}, download-url: {downloadUrl}")
                 self.assets.append(Asset(fileName, contentType, downloadUrl))
         self.notes = rawJson["body"]
 
@@ -309,10 +335,11 @@ class UpdateContext:
         if not self.tag.startswith('v'):
             return
         tag = self.tag[1:]
-        ints = tag.split('.')
-        for i in ints:
+        tag = tag.split('.')
+        ints = []
+        for part in tag:
             try:
-                self.version.append(int(i))
+                ints.append(int(part))
             except:
                 pass
         self.version = AppVersion(version=ints)
@@ -350,11 +377,5 @@ async def checkNewRelease() -> UpdateContext:
             jason = json.load(auto)
             update = UpdateContext(jason)
             if len(update.assets) > 0:
-                print(update)
                 return update
             return None
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
-    asyncio.run(checkNewRelease())
